@@ -1,0 +1,16 @@
+excluded: # paths to ignore during linting. Takes precedence over `included`.
+  - Carthage
+  - Pods
+  - fastlane
+  - vendor
+type_name:
+  min_length: 2 # only warning
+identifier_name:
+  min_length: 2
+line_length: 150
+opt_in_rules:
+  sorted_imports
+disabled_rules:
+  - redundant_optional_initialization
+  - cyclomatic_complexity
+  - vertical_parameter_alignment

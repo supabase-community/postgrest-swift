@@ -9,11 +9,11 @@ enum HTTPMethod: String {
 }
 
 public class PostgrestBuilder<T> {
-	private var method: HTTPMethod
-	private var url: URL
-	private var headers: [String: String]
-	private var schema: String?
-	private var body: T?
+	var method: HTTPMethod
+	var url: URL
+	var headers: [String: String]
+	var schema: String?
+	var body: T?
 
 	init(builder: PostgrestBuilder<T>) {
 		self.method = builder.method

@@ -6,7 +6,7 @@ final class postgrest_swiftTests: XCTestCase {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
-        XCTAssertEqual(postgrest_swift().text, "Hello, World!")
+        XCTAssertTrue(true, "TODO: Add Tests")
     }
 
     static var allTests = [

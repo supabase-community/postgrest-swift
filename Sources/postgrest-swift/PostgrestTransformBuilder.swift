@@ -1,6 +1,9 @@
 import Foundation
 
 public class PostgrestTransformBuilder<T>: PostgrestBuilder<T> {
+	/// Performs vertical filtering with `SELECT`.
+	/// - Parameter columns: The columns to retrieve, separated by commas.
+	/// - Returns: Instance of `PostgrestTransformBuilder`
 	public func select(columns: String = "*") -> PostgrestTransformBuilder<T> {
 		/// Remove whitespaces except when quoted
 		var quoted = false

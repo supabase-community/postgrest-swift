@@ -4,12 +4,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "postgrest-swift",
+    name: "PostgREST",
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
-            name: "postgrest-swift",
-            targets: ["postgrest-swift"]),
+            name: "PostgREST",
+            targets: ["PostgREST"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -19,10 +20,12 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
-            name: "postgrest-swift",
-            dependencies: []),
+            name: "PostgREST",
+            dependencies: []
+        ),
         .testTarget(
-            name: "postgrest-swiftTests",
-            dependencies: ["postgrest-swift"]),
+            name: "PostgRESTTests",
+            dependencies: ["PostgREST"]
+        ),
     ]
 )

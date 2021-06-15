@@ -1,7 +1,7 @@
 import XCTest
 
-import postgrest_swiftTests
+import PostgRESTTests
 
 var tests = [XCTestCaseEntry]()
-tests += postgrest_swiftTests.allTests()
+tests += PostgRESTTests.allTests()
 XCTMain(tests)

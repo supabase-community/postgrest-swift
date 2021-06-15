@@ -1,12 +1,12 @@
+@testable import PostgREST
 import XCTest
-@testable import postgrest_swift
 
-final class postgrest_swiftTests: XCTestCase {
+final class PostgRESTTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
-        XCTAssertTrue(true, "TODO: Add Tests")
+//        XCTAssertEqual(PostgREST().text, "Hello, World!")
     }
 
     static var allTests = [

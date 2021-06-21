@@ -1,2 +1,2 @@
 
-class PostgrestTransformBuilder: PostgrestBuilder {}
+public class PostgrestTransformBuilder: PostgrestBuilder {}

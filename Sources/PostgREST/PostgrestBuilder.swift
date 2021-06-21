@@ -1,6 +1,6 @@
 import Foundation
 
-class PostgrestBuilder {
+public class PostgrestBuilder {
     var url: String
     var headers: [String: String]
     var schema: String?

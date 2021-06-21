@@ -1,8 +1,8 @@
-class PostgrestResponse {
-    var body: Any
-    var status: Int?
-    var count: Int?
-    var error: PostgrestError?
+public class PostgrestResponse {
+    public var body: Any
+    public var status: Int?
+    public var count: Int?
+    public var error: PostgrestError?
 
     init(body: Any) {
         self.body = body

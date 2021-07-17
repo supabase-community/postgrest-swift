@@ -1,5 +1,3 @@
-
-
 public class PostgrestClient {
     var url: String
     var headers: [String: String]

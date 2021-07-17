@@ -28,7 +28,7 @@ public class PostgrestBuilder {
             completion(.failure(error))
             return
         }
-        
+
         let session = URLSession.shared
         let dataTask = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) -> Void in
             if let error = error {
@@ -40,12 +40,12 @@ public class PostgrestBuilder {
                 completion(.failure(PostgrestError(message: "failed to get response")))
                 return
             }
-            
+
             guard let data = data else {
                 completion(.failure(PostgrestError(message: "empty data")))
                 return
             }
-            
+
             do {
                 try validate(data: data, response: response)
                 let response = try parse(data: data, response: response)
@@ -62,14 +62,14 @@ public class PostgrestBuilder {
         if 200 ..< 300 ~= response.statusCode {
             return
         }
-        
+
         guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
             throw PostgrestError(message: "failed to get error")
         }
-        
+
         throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
     }
-    
+
     private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
         var body: Any = data
         var count: Int?
@@ -92,7 +92,7 @@ public class PostgrestBuilder {
         postgrestResponse.count = count
         return postgrestResponse
     }
-    
+
     func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {
         if head {
             method = "HEAD"
@@ -125,12 +125,12 @@ public class PostgrestBuilder {
         guard var components = URLComponents(string: url) else {
             throw PostgrestError(message: "badURL")
         }
-        
+
         if !queryParams.isEmpty {
             components.queryItems = components.queryItems ?? []
             components.queryItems!.append(contentsOf: queryParams.map(URLQueryItem.init))
         }
-        
+
         guard let url = components.url else {
             throw PostgrestError(message: "badURL")
         }

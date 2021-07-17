@@ -2,6 +2,7 @@ import Foundation
 
 public class PostgrestBuilder {
     var url: String
+    var queryParams: [(name: String, value: String)] = []
     var headers: [String: String]
     var schema: String?
     var method: String?
@@ -22,44 +23,14 @@ public class PostgrestBuilder {
     }
 
     public func execute(head: Bool = false, count: CountOption? = nil, completion: @escaping (Result<PostgrestResponse, Error>) -> Void) {
-        if head {
-            method = "HEAD"
-        }
-
-        if let count = count {
-            if let prefer = headers["Prefer"] {
-                headers["Prefer"] = "\(prefer),count=\(count.rawValue)"
-            } else {
-                headers["Prefer"] = "count=\(count.rawValue)"
-            }
-        }
-
-        guard let method = method else {
-            completion(.failure(PostgrestError(message: "Missing table operation: select, insert, update or delete")))
+        let request: URLRequest
+        do {
+            request = try buildURLRequest(head: head, count: count)
+        } catch {
+            completion(.failure(error))
             return
         }
-
-        if method == "GET" || method == "HEAD" {
-            headers["Content-Type"] = "application/json"
-        }
-
-        if let schema = schema {
-            if method == "GET" || method == "HEAD" {
-                headers["Accept-Profile"] = schema
-            } else {
-                headers["Content-Profile"] = schema
-            }
-        }
-
-        guard let url = URL(string: url) else {
-            completion(.failure(PostgrestError(message: "badURL")))
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.allHTTPHeaderFields = headers
-
+        
         let session = URLSession.shared
         let dataTask = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) -> Void in
             if let error = error {
@@ -122,10 +93,56 @@ public class PostgrestBuilder {
             }
         }
     }
+    
+    func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {
+        if head {
+            method = "HEAD"
+        }
+
+        if let count = count {
+            if let prefer = headers["Prefer"] {
+                headers["Prefer"] = "\(prefer),count=\(count.rawValue)"
+            } else {
+                headers["Prefer"] = "count=\(count.rawValue)"
+            }
+        }
+
+        guard let method = method else {
+            throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
+        }
+
+        if method == "GET" || method == "HEAD" {
+            headers["Content-Type"] = "application/json"
+        }
+
+        if let schema = schema {
+            if method == "GET" || method == "HEAD" {
+                headers["Accept-Profile"] = schema
+            } else {
+                headers["Content-Profile"] = schema
+            }
+        }
+
+        guard var components = URLComponents(string: url) else {
+            throw PostgrestError(message: "badURL")
+        }
+        
+        if !queryParams.isEmpty {
+            components.queryItems = components.queryItems ?? []
+            components.queryItems!.append(contentsOf: queryParams.map(URLQueryItem.init))
+        }
+        
+        guard let url = components.url else {
+            throw PostgrestError(message: "badURL")
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.allHTTPHeaderFields = headers
+        return request
+    }
 
     func appendSearchParams(name: String, value: String) {
-        var urlComponent = URLComponents(string: url)
-        urlComponent?.queryItems?.append(URLQueryItem(name: name, value: value))
-        url = urlComponent?.url?.absoluteString ?? url
+        queryParams.append((name, value))
     }
 }

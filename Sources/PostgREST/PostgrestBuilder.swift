@@ -48,50 +48,51 @@ public class PostgrestBuilder {
                 return
             }
             
-            completion(Result { try self.parse(data: data, response: response)} )
+            do {
+                try validate(data: data, response: response)
+                let response = try parse(data: data, response: response)
+                completion(.success(response))
+            } catch {
+                completion(.failure(error))
+            }
         })
 
         dataTask.resume()
     }
 
+    private func validate(data: Data, response: HTTPURLResponse) throws {
+        if 200 ..< 300 ~= response.statusCode {
+            return
+        }
+        
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            throw PostgrestError(message: "failed to get error")
+        }
+        
+        throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
+    }
+    
     private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
-        if response.statusCode == 200 || 200 ..< 300 ~= response.statusCode {
-            var body: Any = data
-            var count: Int?
+        var body: Any = data
+        var count: Int?
 
-            if let method = method, method == "HEAD" {
-                if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
-                    body = data
-                } else {
-                    do {
-                        let json = try JSONSerialization.jsonObject(with: data, options: [])
-                        body = json
-                    } catch {
-                        throw error
-                    }
-                }
-            }
-
-            if let contentRange = response.allHeaderFields["content-range"] as? String, let lastElement = contentRange.split(separator: "/").last {
-                count = lastElement == "*" ? nil : Int(lastElement)
-            }
-
-            let postgrestResponse = PostgrestResponse(body: body)
-            postgrestResponse.status = response.statusCode
-            postgrestResponse.count = count
-            return postgrestResponse
-        } else {
-            do {
-                let json = try JSONSerialization.jsonObject(with: data, options: [])
-                if let errorJson: [String: Any] = json as? [String: Any] {
-                    throw PostgrestError(from: errorJson) ?? PostgrestError(message: "failed to get error")
-                } else {
-                    throw PostgrestError(message: "failed to get error")
-                }
-            } catch {
-                throw error
+        if method == "HEAD" {
+            if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
+                body = data
+            } else {
+                try JSONSerialization.jsonObject(with: data, options: [])
             }
         }
+
+        if let contentRange = response.allHeaderFields["content-range"] as? String,
+           let lastElement = contentRange.split(separator: "/").last {
+            count = lastElement == "*" ? nil : Int(lastElement)
+        }
+
+        let postgrestResponse = PostgrestResponse(body: body)
+        postgrestResponse.status = response.statusCode
+        postgrestResponse.count = count
+        return postgrestResponse
     }
     
     func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {

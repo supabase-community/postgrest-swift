@@ -34,17 +34,17 @@ public class PostgrestBuilder {
             }
         }
 
-        if method == nil {
+        guard let method = method else {
             completion(.failure(PostgrestError(message: "Missing table operation: select, insert, update or delete")))
             return
         }
 
-        if let method = method, method == "GET" || method == "HEAD" {
+        if method == "GET" || method == "HEAD" {
             headers["Content-Type"] = "application/json"
         }
 
         if let schema = schema {
-            if let method = method, method == "GET" || method == "HEAD" {
+            if method == "GET" || method == "HEAD" {
                 headers["Accept-Profile"] = schema
             } else {
                 headers["Content-Profile"] = schema
@@ -67,19 +67,17 @@ public class PostgrestBuilder {
                 return
             }
 
-            if let resp = response as? HTTPURLResponse {
-                if let data = data {
-                    do {
-                        completion(.success(try self.parse(data: data, response: resp)))
-                    } catch {
-                        completion(.failure(error))
-                        return
-                    }
-                }
-            } else {
+            guard let response = response as? HTTPURLResponse else {
                 completion(.failure(PostgrestError(message: "failed to get response")))
+                return
             }
-
+            
+            guard let data = data else {
+                completion(.failure(PostgrestError(message: "empty data")))
+                return
+            }
+            
+            completion(Result { try self.parse(data: data, response: response)} )
         })
 
         dataTask.resume()

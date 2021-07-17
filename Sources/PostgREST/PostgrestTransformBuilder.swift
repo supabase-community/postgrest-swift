@@ -1,2 +1,1 @@
-
 public class PostgrestTransformBuilder: PostgrestBuilder {}

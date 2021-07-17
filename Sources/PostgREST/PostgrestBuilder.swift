@@ -2,20 +2,18 @@ import Foundation
 
 public class PostgrestBuilder {
     var url: String
-    var queryParams: [(name: String, value: String)] = []
+    var queryParams: [(name: String, value: String)]
     var headers: [String: String]
     var schema: String?
     var method: String?
     var body: [String: Any]?
 
-    public init(url: String, headers: [String: String] = [:], schema: String?) {
+    init(
+        url: String, queryParams: [(name: String, value: String)], headers: [String: String],
+        schema: String?, method: String?, body: [String: Any]?
+    ) {
         self.url = url
-        self.headers = headers
-        self.schema = schema
-    }
-
-    public init(url: String, method: String?, headers: [String: String] = [:], schema: String?, body: [String: Any]?) {
-        self.url = url
+        self.queryParams = queryParams
         self.headers = headers
         self.schema = schema
         self.method = method

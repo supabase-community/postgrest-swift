@@ -1,9 +1,4 @@
-
 public class PostgrestQueryBuilder: PostgrestBuilder {
-    override public init(url: String, method: String? = nil, headers: [String: String] = [:], schema: String? = nil, body: [String: Any]? = nil) {
-        super.init(url: url, method: method, headers: headers, schema: schema, body: body)
-    }
-
     public func select(columns: String = "*") -> PostgrestFilterBuilder {
         method = "GET"
         var quoted = false
@@ -17,7 +12,9 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
             return String(char)
         }.reduce("", +)
         appendSearchParams(name: "select", value: cleanedColumns)
-        return PostgrestFilterBuilder(url: url, method: method, headers: headers, schema: schema, body: body)
+        return PostgrestFilterBuilder(
+            url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
+            body: body)
     }
 
     public func insert(values: [String: Any], upsert: Bool = false, onConflict: String? = nil) -> PostgrestBuilder {
@@ -46,12 +43,16 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         method = "PATCH"
         headers["Prefer"] = "return=representation"
         body = values
-        return PostgrestFilterBuilder(url: url, method: method, headers: headers, schema: schema, body: body)
+        return PostgrestFilterBuilder(
+            url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
+            body: body)
     }
 
     public func delete() -> PostgrestFilterBuilder {
         method = "DELETE"
         headers["Prefer"] = "return=representation"
-        return PostgrestFilterBuilder(url: url, method: method, headers: headers, schema: schema, body: body)
+        return PostgrestFilterBuilder(
+            url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
+            body: body)
     }
 }

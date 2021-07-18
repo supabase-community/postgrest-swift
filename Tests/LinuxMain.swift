@@ -1,6 +1,5 @@
-import XCTest
-
 import PostgRESTTests
+import XCTest
 
 var tests = [XCTestCaseEntry]()
 tests += PostgRESTTests.allTests()

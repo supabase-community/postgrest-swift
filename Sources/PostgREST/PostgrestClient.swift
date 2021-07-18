@@ -1,5 +1,3 @@
-
-
 public class PostgrestClient {
     var url: String
     var headers: [String: String]
@@ -12,10 +10,10 @@ public class PostgrestClient {
     }
 
     public func form(_ table: String) -> PostgrestQueryBuilder {
-        return PostgrestQueryBuilder(url: "\(url)/\(table)", headers: headers, schema: schema)
+        return PostgrestQueryBuilder(url: "\(url)/\(table)", queryParams: [], headers: headers, schema: schema, method: nil, body: nil)
     }
 
     public func rpc(fn: String, parameters: [String: Any]?) -> PostgrestTransformBuilder {
-        return PostgrestRpcBuilder(url: "\(url)/rpc/\(fn)", headers: headers, schema: schema).rpc(parameters: parameters)
+        return PostgrestRpcBuilder(url: "\(url)/rpc/\(fn)", queryParams: [], headers: headers, schema: schema, method: nil, body: nil).rpc(parameters: parameters)
     }
 }

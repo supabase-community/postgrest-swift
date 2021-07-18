@@ -2,19 +2,18 @@ import Foundation
 
 public class PostgrestBuilder {
     var url: String
+    var queryParams: [(name: String, value: String)]
     var headers: [String: String]
     var schema: String?
     var method: String?
     var body: [String: Any]?
 
-    public init(url: String, headers: [String: String] = [:], schema: String?) {
+    init(
+        url: String, queryParams: [(name: String, value: String)], headers: [String: String],
+        schema: String?, method: String?, body: [String: Any]?
+    ) {
         self.url = url
-        self.headers = headers
-        self.schema = schema
-    }
-
-    public init(url: String, method: String?, headers: [String: String] = [:], schema: String?, body: [String: Any]?) {
-        self.url = url
+        self.queryParams = queryParams
         self.headers = headers
         self.schema = schema
         self.method = method
@@ -22,6 +21,79 @@ public class PostgrestBuilder {
     }
 
     public func execute(head: Bool = false, count: CountOption? = nil, completion: @escaping (Result<PostgrestResponse, Error>) -> Void) {
+        let request: URLRequest
+        do {
+            request = try buildURLRequest(head: head, count: count)
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
+        let session = URLSession.shared
+        let dataTask = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) -> Void in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let response = response as? HTTPURLResponse else {
+                completion(.failure(PostgrestError(message: "failed to get response")))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(PostgrestError(message: "empty data")))
+                return
+            }
+
+            do {
+                try validate(data: data, response: response)
+                let response = try parse(data: data, response: response)
+                completion(.success(response))
+            } catch {
+                completion(.failure(error))
+            }
+        })
+
+        dataTask.resume()
+    }
+
+    private func validate(data: Data, response: HTTPURLResponse) throws {
+        if 200 ..< 300 ~= response.statusCode {
+            return
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            throw PostgrestError(message: "failed to get error")
+        }
+
+        throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
+    }
+
+    private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
+        var body: Any = data
+        var count: Int?
+
+        if method == "HEAD" {
+            if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
+                body = data
+            } else {
+                try JSONSerialization.jsonObject(with: data, options: [])
+            }
+        }
+
+        if let contentRange = response.allHeaderFields["content-range"] as? String,
+           let lastElement = contentRange.split(separator: "/").last {
+            count = lastElement == "*" ? nil : Int(lastElement)
+        }
+
+        let postgrestResponse = PostgrestResponse(body: body)
+        postgrestResponse.status = response.statusCode
+        postgrestResponse.count = count
+        return postgrestResponse
+    }
+
+    func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {
         if head {
             method = "HEAD"
         }
@@ -34,100 +106,42 @@ public class PostgrestBuilder {
             }
         }
 
-        if method == nil {
-            completion(.failure(PostgrestError(message: "Missing table operation: select, insert, update or delete")))
-            return
+        guard let method = method else {
+            throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
         }
 
-        if let method = method, method == "GET" || method == "HEAD" {
+        if method == "GET" || method == "HEAD" {
             headers["Content-Type"] = "application/json"
         }
 
         if let schema = schema {
-            if let method = method, method == "GET" || method == "HEAD" {
+            if method == "GET" || method == "HEAD" {
                 headers["Accept-Profile"] = schema
             } else {
                 headers["Content-Profile"] = schema
             }
         }
 
-        guard let url = URL(string: url) else {
-            completion(.failure(PostgrestError(message: "badURL")))
-            return
+        guard var components = URLComponents(string: url) else {
+            throw PostgrestError(message: "badURL")
+        }
+
+        if !queryParams.isEmpty {
+            components.queryItems = components.queryItems ?? []
+            components.queryItems!.append(contentsOf: queryParams.map(URLQueryItem.init))
+        }
+
+        guard let url = components.url else {
+            throw PostgrestError(message: "badURL")
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
-
-        let session = URLSession.shared
-        let dataTask = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) -> Void in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            if let resp = response as? HTTPURLResponse {
-                if let data = data {
-                    do {
-                        completion(.success(try self.parse(data: data, response: resp)))
-                    } catch {
-                        completion(.failure(error))
-                        return
-                    }
-                }
-            } else {
-                completion(.failure(PostgrestError(message: "failed to get response")))
-            }
-
-        })
-
-        dataTask.resume()
-    }
-
-    private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
-        if response.statusCode == 200 || 200 ..< 300 ~= response.statusCode {
-            var body: Any = data
-            var count: Int?
-
-            if let method = method, method == "HEAD" {
-                if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
-                    body = data
-                } else {
-                    do {
-                        let json = try JSONSerialization.jsonObject(with: data, options: [])
-                        body = json
-                    } catch {
-                        throw error
-                    }
-                }
-            }
-
-            if let contentRange = response.allHeaderFields["content-range"] as? String, let lastElement = contentRange.split(separator: "/").last {
-                count = lastElement == "*" ? nil : Int(lastElement)
-            }
-
-            let postgrestResponse = PostgrestResponse(body: body)
-            postgrestResponse.status = response.statusCode
-            postgrestResponse.count = count
-            return postgrestResponse
-        } else {
-            do {
-                let json = try JSONSerialization.jsonObject(with: data, options: [])
-                if let errorJson: [String: Any] = json as? [String: Any] {
-                    throw PostgrestError(from: errorJson) ?? PostgrestError(message: "failed to get error")
-                } else {
-                    throw PostgrestError(message: "failed to get error")
-                }
-            } catch {
-                throw error
-            }
-        }
+        return request
     }
 
     func appendSearchParams(name: String, value: String) {
-        var urlComponent = URLComponents(string: url)
-        urlComponent?.queryItems?.append(URLQueryItem(name: name, value: value))
-        url = urlComponent?.url?.absoluteString ?? url
+        queryParams.append((name, value))
     }
 }

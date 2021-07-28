@@ -138,6 +138,9 @@ public class PostgrestBuilder {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
+        if let body = body {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        }
         return request
     }
 

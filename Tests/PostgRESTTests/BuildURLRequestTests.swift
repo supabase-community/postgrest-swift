@@ -28,10 +28,10 @@ final class BuildURLRequestTests: XCTestCase {
                     .insert(values: ["email": "johndoe@supabase.io"])
                     .buildURLRequest(head: false, count: nil)
             },
-            TestCase(name: "call rpc") { client in
+            TestCase(name: "call rpc", build: { client in
                 try client.rpc(fn: "test_fcn", parameters: ["KEY": "VALUE"])
                     .buildURLRequest(head: false, count: nil)
-            }
+            })
         ]
 
         for testCase in testCases {

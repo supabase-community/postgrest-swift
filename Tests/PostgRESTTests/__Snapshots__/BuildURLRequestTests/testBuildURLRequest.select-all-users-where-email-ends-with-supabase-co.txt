@@ -1,3 +1,0 @@
-curl \
-	--header "Content-Type: application/json" \
-	"https://example.supabase.co/users?select=*&email=like.%25@supabase.co"

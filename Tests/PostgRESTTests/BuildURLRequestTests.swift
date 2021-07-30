@@ -18,7 +18,7 @@ final class BuildURLRequestTests: XCTestCase {
 
         let testCases: [TestCase] = [
             TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-                try client.form("users")
+                try client.from("users")
                     .select()
                     .like(column: "email", value: "%@supabase.co")
                     .buildURLRequest(head: false, count: nil)
@@ -27,8 +27,7 @@ final class BuildURLRequestTests: XCTestCase {
 
         for testCase in testCases {
             let request = try testCase.build(client)
-            assertSnapshot(
-                matching: request, as: .curl, named: testCase.name, record: testCase.record)
+            assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record)
         }
     }
 }

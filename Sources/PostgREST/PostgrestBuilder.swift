@@ -19,7 +19,12 @@ public class PostgrestBuilder {
         self.method = method
         self.body = body
     }
-
+    
+    /// Executes the built query or command.
+    /// - Parameters:
+    ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `true`
+    ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
+    ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`. Called after API call is completed and validated.
     public func execute(head: Bool = false, count: CountOption? = nil, completion: @escaping (Result<PostgrestResponse, Error>) -> Void) {
         let request: URLRequest
         do {
@@ -57,7 +62,12 @@ public class PostgrestBuilder {
 
         dataTask.resume()
     }
-
+    
+    /// Validates the response from PostgREST
+    /// - Parameters:
+    ///   - data: `Data` received from the server.
+    ///   - response: `HTTPURLResponse` received from the server.
+    /// - Throws: Throws `PostgrestError` if invalid JSON object.
     private func validate(data: Data, response: HTTPURLResponse) throws {
         if 200 ..< 300 ~= response.statusCode {
             return
@@ -69,7 +79,13 @@ public class PostgrestBuilder {
 
         throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
     }
-
+    
+    /// Parses incoming data and server response into a `PostgrestResponse`
+    /// - Parameters:
+    ///   - data: Data received from the server
+    ///   - response: Response received from the server
+    /// - Throws: Throws an `Error` if invalid JSON.
+    /// - Returns: Returns a `PostgrestResponse`
     private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
         var body: Any = data
         var count: Int?
@@ -92,7 +108,13 @@ public class PostgrestBuilder {
         postgrestResponse.count = count
         return postgrestResponse
     }
-
+    
+    /// Builds the URL request for PostgREST
+    /// - Parameters:
+    ///   - head: If on, use `HEAD` as the HTTP method.
+    ///   - count: A `CountOption`,
+    /// - Throws: Throws a `PostgressError`
+    /// - Returns: Returns a valid URLRequest for the current query.
     func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {
         if head {
             method = "HEAD"

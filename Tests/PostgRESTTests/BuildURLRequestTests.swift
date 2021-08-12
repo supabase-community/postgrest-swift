@@ -24,7 +24,7 @@ final class BuildURLRequestTests: XCTestCase {
                     .buildURLRequest(head: false, count: nil)
             },
             TestCase(name: "insert new user") { client in
-                try client.from("users")
+                try client.form("users")
                     .insert(values: ["email": "johndoe@supabase.io"])
                     .buildURLRequest(head: false, count: nil)
             },

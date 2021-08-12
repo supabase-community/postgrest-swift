@@ -3,7 +3,11 @@ public class PostgrestRpcBuilder: PostgrestBuilder {
         method = "POST"
         body = parameters
         return PostgrestTransformBuilder(
-            url: url, queryParams: queryParams, headers: headers, schema: schema, method: schema,
+            url: url,
+            queryParams: queryParams,
+            headers: headers,
+            schema: schema,
+            method: method,
             body: body)
     }
 }

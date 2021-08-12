@@ -1,0 +1,5 @@
+curl \
+	--request POST \
+	--header "Prefer: return=representation" \
+	--data "{\"email\":\"johndoe@supabase.io\"}" \
+	"https://example.supabase.co/users"

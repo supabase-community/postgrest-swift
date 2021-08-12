@@ -35,7 +35,7 @@ public class PostgrestBuilder {
         }
 
         let session = URLSession.shared
-        let dataTask = session.dataTask(with: request, completionHandler: { [unowned self] (data, response, error) -> Void in
+        let dataTask = session.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -52,8 +52,8 @@ public class PostgrestBuilder {
             }
 
             do {
-                try validate(data: data, response: response)
-                let response = try parse(data: data, response: response)
+                try Self.validate(data: data, response: response)
+                let response = try Self.parse(data: data, response: response, request: request)
                 completion(.success(response))
             } catch {
                 completion(.failure(error))
@@ -68,7 +68,7 @@ public class PostgrestBuilder {
     ///   - data: `Data` received from the server.
     ///   - response: `HTTPURLResponse` received from the server.
     /// - Throws: Throws `PostgrestError` if invalid JSON object.
-    private func validate(data: Data, response: HTTPURLResponse) throws {
+    private static func validate(data: Data, response: HTTPURLResponse) throws {
         if 200 ..< 300 ~= response.statusCode {
             return
         }
@@ -86,11 +86,11 @@ public class PostgrestBuilder {
     ///   - response: Response received from the server
     /// - Throws: Throws an `Error` if invalid JSON.
     /// - Returns: Returns a `PostgrestResponse`
-    private func parse(data: Data, response: HTTPURLResponse) throws -> PostgrestResponse {
+    private static func parse(data: Data, response: HTTPURLResponse, request: URLRequest) throws -> PostgrestResponse {
         var body: Any = data
         var count: Int?
 
-        if method == "HEAD" {
+        if request.httpMethod == "HEAD" {
             if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
                 body = data
             } else {
@@ -160,6 +160,9 @@ public class PostgrestBuilder {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
+        if let body = body {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        }
         return request
     }
 

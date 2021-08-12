@@ -18,7 +18,7 @@ final class BuildURLRequestTests: XCTestCase {
 
         let testCases: [TestCase] = [
             TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-                try client.from("users")
+                try client.form("users")
                     .select()
                     .like(column: "email", value: "%@supabase.co")
                     .buildURLRequest(head: false, count: nil)

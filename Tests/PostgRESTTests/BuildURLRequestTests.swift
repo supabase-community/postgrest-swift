@@ -32,8 +32,7 @@ final class BuildURLRequestTests: XCTestCase {
 
         for testCase in testCases {
             let request = try testCase.build(client)
-            assertSnapshot(
-                matching: request, as: .curl, named: testCase.name, record: testCase.record)
+            assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record)
         }
     }
 }

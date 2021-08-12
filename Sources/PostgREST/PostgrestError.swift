@@ -7,16 +7,13 @@ public struct PostgrestError: Error {
     public var message: String
 
     init?(from dictionary: [String: Any]) {
-        guard let details = dictionary["details"] as? String,
-              let hint = dictionary["hint"] as? String,
-              let code = dictionary["code"] as? String,
-              let message = dictionary["message"] as? String
-        else {
+        guard let message = dictionary["message"] as? String else {
             return nil
         }
-        self.details = details
-        self.hint = hint
-        self.code = code
+
+        self.details = dictionary["details"] as? String
+        self.hint = dictionary["hint"] as? String
+        self.code = dictionary["code"] as? String
         self.message = message
     }
 

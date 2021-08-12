@@ -18,13 +18,13 @@ final class BuildURLRequestTests: XCTestCase {
 
         let testCases: [TestCase] = [
             TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-                try client.form("users")
+                try client.from("users")
                     .select()
                     .like(column: "email", value: "%@supabase.co")
                     .buildURLRequest(head: false, count: nil)
             },
             TestCase(name: "insert new user") { client in
-                try client.form("users")
+                try client.from("users")
                     .insert(values: ["email": "johndoe@supabase.io"])
                     .buildURLRequest(head: false, count: nil)
             },

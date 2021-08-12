@@ -12,6 +12,10 @@ Add `postgrest-swift` as a dependency to your `Package.swift` file. For more inf
 .package(url: "https://github.com/supabase/postgrest-swift", from: "0.1.0")
 ```
 
+### Supabase
+
+You can also install the [ `supabase-swift`](https://github.com/supabase/supabase-swift) package to use the entire supabase library.
+
 ## Usage
 
 Query todo table for all completed todos.
@@ -54,11 +58,34 @@ do {
         // Handle response
     }
 } catch {
-   print("Error querying for todos: \(error)")
+   print("Error inserting the todo: \(error)")
 }
 ```
 
 For more query examples visit [the Javascript docs](https://supabase.io/docs/reference/javascript/select) to learn more. The API design is a near 1:1 match.
+
+Execute an RPC
+```swift
+let client = PostgrestClient(url: "https://example.supabase.co", schema: nil)
+
+do {
+    try client.rpc(fn: "testFunction", parameters: nil).execute { result in
+        // Handle result
+    }
+} catch {
+   print("Error executing the RPC: \(error)")
+}
+```
+
+## Auth
+
+You can add authentication to the databases requests by using the `client.headers` property. For example to add a `Bearer` auth header, simply set the headers dictionary to:
+```swift
+let client = PostgrestClient(url: "https://example.supabase.co",
+                             headers: ["Bearer": "{ Insert Token Here }"]
+                             schema: nil)
+```
+All requests made using this client will be sent with the `Bearer Token` header.
 
 ## Contributing
 

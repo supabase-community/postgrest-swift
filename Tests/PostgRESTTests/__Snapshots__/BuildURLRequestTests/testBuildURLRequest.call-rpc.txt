@@ -1,0 +1,4 @@
+curl \
+	--request POST \
+	--data "{\"KEY\":\"VALUE\"}" \
+	"https://example.supabase.co/rpc/test_fcn"

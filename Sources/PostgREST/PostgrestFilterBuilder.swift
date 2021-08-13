@@ -119,7 +119,8 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
         column: String, query: String, config: String? = nil, type: TextSearchType? = nil
     ) -> PostgrestFilterBuilder {
         appendSearchParams(
-            name: column, value: "\(type?.rawValue ?? "")fts\(config ?? "").\(query)")
+            name: column, value: "\(type?.rawValue ?? "")fts\(config ?? "").\(query)"
+        )
         return self
     }
 

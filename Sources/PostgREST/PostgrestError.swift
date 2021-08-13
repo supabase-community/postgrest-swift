@@ -11,9 +11,9 @@ public struct PostgrestError: Error {
             return nil
         }
 
-        self.details = dictionary["details"] as? String
-        self.hint = dictionary["hint"] as? String
-        self.code = dictionary["code"] as? String
+        details = dictionary["details"] as? String
+        hint = dictionary["hint"] as? String
+        code = dictionary["code"] as? String
         self.message = message
     }
 

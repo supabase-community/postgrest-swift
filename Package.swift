@@ -10,7 +10,8 @@ let package = Package(
         .library(
             name: "PostgREST",
             targets: ["PostgREST"]
-        )
+        ),
+        .executable(name: "example", targets: ["example"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -24,6 +25,10 @@ let package = Package(
         .target(
             name: "PostgREST",
             dependencies: []
+        ),
+        .target(
+            name: "example",
+            dependencies: ["PostgREST"]
         ),
         .testTarget(
             name: "PostgRESTTests",

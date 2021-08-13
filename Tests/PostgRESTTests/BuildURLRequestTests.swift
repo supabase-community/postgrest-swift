@@ -27,7 +27,7 @@ final class BuildURLRequestTests: XCTestCase {
                 try client.from("users")
                     .insert(values: ["email": "johndoe@supabase.io"])
                     .buildURLRequest(head: false, count: nil)
-            }
+            },
         ]
 
         for testCase in testCases {

@@ -4,6 +4,7 @@ public class PostgrestRpcBuilder: PostgrestBuilder {
         body = parameters
         return PostgrestTransformBuilder(
             url: url, queryParams: queryParams, headers: headers, schema: schema, method: schema,
-            body: body)
+            body: body
+        )
     }
 }

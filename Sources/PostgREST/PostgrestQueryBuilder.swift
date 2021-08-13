@@ -2,7 +2,7 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     public func select(columns: String = "*") -> PostgrestFilterBuilder {
         method = "GET"
         var quoted = false
-        let cleanedColumns = columns.compactMap { (char) -> String? in
+        let cleanedColumns = columns.compactMap { char -> String? in
             if char.isWhitespace, !quoted {
                 return nil
             }
@@ -14,7 +14,8 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         appendSearchParams(name: "select", value: cleanedColumns)
         return PostgrestFilterBuilder(
             url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-            body: body)
+            body: body
+        )
     }
 
     public func insert(values: Any, upsert: Bool = false, onConflict: String? = nil) -> PostgrestBuilder {
@@ -45,7 +46,8 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         body = values
         return PostgrestFilterBuilder(
             url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-            body: body)
+            body: body
+        )
     }
 
     public func delete() -> PostgrestFilterBuilder {
@@ -53,6 +55,7 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         headers["Prefer"] = "return=representation"
         return PostgrestFilterBuilder(
             url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-            body: body)
+            body: body
+        )
     }
 }

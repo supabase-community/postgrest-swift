@@ -11,13 +11,14 @@ let package = Package(
             name: "PostgREST",
             targets: ["PostgREST"]
         ),
-        .executable(name: "example", targets: ["example"])
+        .executable(name: "example", targets: ["example"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(
             name: "SnapshotTesting",
-            url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.8.1")
+            url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.8.1"
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -33,6 +34,6 @@ let package = Package(
         .testTarget(
             name: "PostgRESTTests",
             dependencies: ["PostgREST", "SnapshotTesting"]
-        )
+        ),
     ]
 )

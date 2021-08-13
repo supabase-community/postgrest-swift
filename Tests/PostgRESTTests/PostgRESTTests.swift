@@ -10,6 +10,6 @@ final class PostgRESTTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testExample", testExample)
+        ("testExample", testExample),
     ]
 }

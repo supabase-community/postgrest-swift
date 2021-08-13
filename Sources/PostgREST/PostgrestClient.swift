@@ -22,7 +22,7 @@ public class PostgrestClient {
     /// Select a table to query from
     /// - Parameter table: The ID of the table to query
     /// - Returns: `PostgrestQueryBuilder`
-    public func form(_ table: String) -> PostgrestQueryBuilder {
+    public func from(_ table: String) -> PostgrestQueryBuilder {
         return PostgrestQueryBuilder(url: "\(url)/\(table)", queryParams: [], headers: headers, schema: schema, method: nil, body: nil)
     }
     

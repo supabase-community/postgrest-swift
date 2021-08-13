@@ -6,11 +6,11 @@ public class PostgrestBuilder {
     var headers: [String: String]
     var schema: String?
     var method: String?
-    var body: [String: Any]?
+    var body: Any?
 
     init(
         url: String, queryParams: [(name: String, value: String)], headers: [String: String],
-        schema: String?, method: String?, body: [String: Any]?
+        schema: String?, method: String?, body: Any?
     ) {
         self.url = url
         self.queryParams = queryParams
@@ -132,9 +132,9 @@ public class PostgrestBuilder {
             throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
         }
 
-        if method == "GET" || method == "HEAD" {
+//        if method == "GET" || method == "HEAD" {
             headers["Content-Type"] = "application/json"
-        }
+//        }
 
         if let schema = schema {
             if method == "GET" || method == "HEAD" {

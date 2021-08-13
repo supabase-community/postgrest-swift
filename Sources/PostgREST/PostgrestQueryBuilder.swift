@@ -17,7 +17,7 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
             body: body)
     }
 
-    public func insert(values: [String: Any], upsert: Bool = false, onConflict: String? = nil) -> PostgrestBuilder {
+    public func insert(values: Any, upsert: Bool = false, onConflict: String? = nil) -> PostgrestBuilder {
         method = "POST"
         headers["Prefer"] = upsert ? "return=representation,resolution=merge-duplicates" : "return=representation"
         if let onConflict = onConflict {
@@ -28,7 +28,7 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         return self
     }
 
-    public func upsert(values: [String: Any], onConflict: String? = nil) -> PostgrestBuilder {
+    public func upsert(values: Any, onConflict: String? = nil) -> PostgrestBuilder {
         method = "POST"
         headers["Prefer"] = "return=representation,resolution=merge-duplicates"
         if let onConflict = onConflict {
@@ -39,7 +39,7 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         return self
     }
 
-    public func update(values: [String: Any]) -> PostgrestFilterBuilder {
+    public func update(values: Any) -> PostgrestFilterBuilder {
         method = "PATCH"
         headers["Prefer"] = "return=representation"
         body = values

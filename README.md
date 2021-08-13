@@ -18,74 +18,71 @@ You can also install the [ `supabase-swift`](https://github.com/supabase/supabas
 
 ## Usage
 
-Query todo table for all completed todos.
 ```swift
-let client = PostgrestClient(url: "https://example.supabase.co", schema: nil)
+import Foundation
+import PostgREST
 
-do {
-   let query = try client.from("todos")
-                           .select()
-                           .eq(column: "isDone", value: "true")
-   try query.execute { [weak self] (results) in
-       guard let self = self else { return }
+let supabaseUrl = ""
+let supabaseKey = ""
 
-       // Handle results
-   }
-} catch {
-   print("Error querying for todos: \(error)")
-}
-```
+var database = PostgrestClient(
+    url: "\(supabaseUrl)/rest/v1",
+    headers: ["apikey": supabaseKey],
+    schema: "public")
 
-Insert a todo into the database.
-```swift
-let client = PostgrestClient(url: "https://example.supabase.co", schema: nil)
+let semaphore = DispatchSemaphore(value: 0)
 
 struct Todo: Codable {
-    var id: UUID = UUID()
-    var label: String
-    var isDone: Bool = false
+    var id: Int?
+    var task: String?
+    var completed: Bool?
 }
 
-let todo = Todo(label: "Example todo!")
+database.from("todo").select().execute { result in
+    switch result {
+    case let .success(response):
+        guard let data = response.body as? Data else {
+            return
+        }
+        do {
+            let todos = try JSONDecoder().decode([Todo].self, from: data)
+            print(todos)
+        } catch {
+            print(error.localizedDescription)
+        }
+    case let .failure(error):
+        print(error.localizedDescription)
+    }
+}
 
 do {
+    let todo = Todo(task: "fix some issues in postgrest-swift", completed: true)
     let jsonData: Data = try JSONEncoder().encode(todo)
-    let jsonDict: [String: Any] = try JSONSerialization.jsonObject(with: jsonData, options: .allowFragments))
-    
-    try client.from("todos")    
-        .insert(values: jsonDict)
-        .execute { results in
-        // Handle response
+
+    database.from("todo").insert(values: jsonData).execute { result in
+        switch result {
+        case let .success(response):
+            guard let data = response.body as? Data else {
+                return
+            }
+            do {
+                let todos = try JSONDecoder().decode([Todo].self, from: data)
+                print(todos)
+            } catch {
+                print(error.localizedDescription)
+            }
+        case let .failure(error):
+            print(error.localizedDescription)
+        }
     }
+
 } catch {
-   print("Error inserting the todo: \(error)")
+    print(error.localizedDescription)
 }
+
+semaphore.wait()
+
 ```
-
-For more query examples visit [the Javascript docs](https://supabase.io/docs/reference/javascript/select) to learn more. The API design is a near 1:1 match.
-
-Execute an RPC
-```swift
-let client = PostgrestClient(url: "https://example.supabase.co", schema: nil)
-
-do {
-    try client.rpc(fn: "testFunction", parameters: nil).execute { result in
-        // Handle result
-    }
-} catch {
-   print("Error executing the RPC: \(error)")
-}
-```
-
-## Auth
-
-You can add authentication to the databases requests by using the `client.headers` property. For example to add a `Bearer` auth header, simply set the headers dictionary to:
-```swift
-let client = PostgrestClient(url: "https://example.supabase.co",
-                             headers: ["Bearer": "{ Insert Token Here }"]
-                             schema: nil)
-```
-All requests made using this client will be sent with the `Bearer Token` header.
 
 ## Contributing
 

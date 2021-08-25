@@ -6,11 +6,11 @@ public class PostgrestBuilder {
     var headers: [String: String]
     var schema: String?
     var method: String?
-    var body: [String: Any]?
+    var body: Any?
 
     init(
         url: String, queryParams: [(name: String, value: String)], headers: [String: String],
-        schema: String?, method: String?, body: [String: Any]?
+        schema: String?, method: String?, body: Any?
     ) {
         self.url = url
         self.queryParams = queryParams
@@ -19,7 +19,7 @@ public class PostgrestBuilder {
         self.method = method
         self.body = body
     }
-    
+
     /// Executes the built query or command.
     /// - Parameters:
     ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `true`
@@ -35,7 +35,7 @@ public class PostgrestBuilder {
         }
 
         let session = URLSession.shared
-        let dataTask = session.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+        let dataTask = session.dataTask(with: request, completionHandler: { data, response, error -> Void in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -62,7 +62,7 @@ public class PostgrestBuilder {
 
         dataTask.resume()
     }
-    
+
     /// Validates the response from PostgREST
     /// - Parameters:
     ///   - data: `Data` received from the server.
@@ -79,7 +79,7 @@ public class PostgrestBuilder {
 
         throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
     }
-    
+
     /// Parses incoming data and server response into a `PostgrestResponse`
     /// - Parameters:
     ///   - data: Data received from the server
@@ -99,7 +99,8 @@ public class PostgrestBuilder {
         }
 
         if let contentRange = response.allHeaderFields["content-range"] as? String,
-           let lastElement = contentRange.split(separator: "/").last {
+           let lastElement = contentRange.split(separator: "/").last
+        {
             count = lastElement == "*" ? nil : Int(lastElement)
         }
 
@@ -108,7 +109,7 @@ public class PostgrestBuilder {
         postgrestResponse.count = count
         return postgrestResponse
     }
-    
+
     /// Builds the URL request for PostgREST
     /// - Parameters:
     ///   - head: If on, use `HEAD` as the HTTP method.
@@ -132,9 +133,9 @@ public class PostgrestBuilder {
             throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
         }
 
-        if method == "GET" || method == "HEAD" {
-            headers["Content-Type"] = "application/json"
-        }
+//        if method == "GET" || method == "HEAD" {
+        headers["Content-Type"] = "application/json"
+//        }
 
         if let schema = schema {
             if method == "GET" || method == "HEAD" {
@@ -161,8 +162,11 @@ public class PostgrestBuilder {
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
         if let body = body {
-            headers["Content-Type"] = "application/json"
-            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+            if let httpBody = body as? Data {
+                request.httpBody = httpBody
+            } else {
+                request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+            }
         }
         return request
     }

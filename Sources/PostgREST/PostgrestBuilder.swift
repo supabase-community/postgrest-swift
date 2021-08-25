@@ -161,6 +161,7 @@ public class PostgrestBuilder {
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
         if let body = body {
+            headers["Content-Type"] = "application/json"
             request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
         }
         return request

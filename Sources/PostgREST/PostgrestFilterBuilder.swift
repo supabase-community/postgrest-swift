@@ -4,6 +4,8 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
     public enum Operator: String {
         case eq, neq, gt, gte, lt, lte, like, ilike, `is`, `in`, cs, cd, sl, sr, nxl, nxr, adj, ov, fts, plfts, phfts, wfts
     }
+    
+    // MARK: - Filters
 
     public func not(column: String, operator op: Operator, value: String) -> PostgrestFilterBuilder {
         appendSearchParams(name: column, value: "not.\(op.rawValue).\(value)")
@@ -153,6 +155,49 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
         query.forEach { key, value in
             appendSearchParams(name: key, value: "eq.\(value)")
         }
+        return self
+    }
+    
+    // MARK: - Modifiers
+    
+    /// Limits the number of results returned by the query
+    /// https://supabase.io/docs/reference/javascript/limit
+    /// - Parameter limit: Number of results to return
+    public func limit(_ limit: Int) -> PostgrestFilterBuilder {
+        appendSearchParams(name: "limit", value: String(limit))
+        return self
+    }
+    
+    /// Offsets the query by a number of results. Useful for paginating queries
+    /// https://postgrest.org/en/v8.0/api.html#limits-and-pagination
+    /// - Parameter offset: Number of results to offset by
+    public func offset(_ offset: Int) -> PostgrestFilterBuilder {
+        appendSearchParams(name: "offset", value: String(offset))
+        return self
+    }
+    
+    /// Limits a query to a range of values
+    /// https://supabase.io/docs/reference/javascript/range
+    /// - Parameters:
+    ///   - offset: The start offset
+    ///   - range: How many results to return after the offset
+    public func range(_ offset: Int, _ range: Int) -> PostgrestFilterBuilder {
+        return self.offset(offset).limit(range)
+    }
+    
+    /// Returns only a single result
+    /// https://supabase.io/docs/reference/javascript/single
+    public func single() -> PostgrestFilterBuilder {
+        return self.limit(1)
+    }
+    
+    /// Orders the results by a column
+    /// https://postgrest.org/en/v8.0/api.html#ordering
+    /// - Parameters:
+    ///   - column: Column to order by
+    ///   - desc: Toggle descending order
+    public func order(_ column: String, desc: Bool = false) -> PostgrestFilterBuilder {
+        appendSearchParams(name: "order", value: desc ? "\(column).desc" : "\(column).asc")
         return self
     }
 }

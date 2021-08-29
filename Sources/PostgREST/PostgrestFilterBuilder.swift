@@ -177,12 +177,13 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
     }
     
     /// Limits a query to a range of values
+    /// Eg: 15 - 30 gets the results from 15 -> 30
     /// https://supabase.io/docs/reference/javascript/range
     /// - Parameters:
     ///   - offset: The start offset
-    ///   - range: How many results to return after the offset
+    ///   - range: The last index of the range
     public func range(_ offset: Int, _ range: Int) -> PostgrestFilterBuilder {
-        return self.offset(offset).limit(range)
+        return self.offset(offset).limit(range - offset)
     }
     
     /// Returns only a single result

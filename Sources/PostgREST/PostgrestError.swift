@@ -1,23 +1,15 @@
 import Foundation
 
-public struct PostgrestError: Error {
-    public var details: String?
-    public var hint: String?
-    public var code: String?
-    public var message: String
-
-    init?(from dictionary: [String: Any]) {
-        guard let message = dictionary["message"] as? String else {
-            return nil
-        }
-
-        details = dictionary["details"] as? String
-        hint = dictionary["hint"] as? String
-        code = dictionary["code"] as? String
-        self.message = message
-    }
-
-    init(message: String) {
+public struct PostgrestError: Error, Codable {
+    public let details: String?
+    public let hint: String?
+    public let code: String?
+    public let message: String
+    
+    public init(details: String? = nil, hint: String? = nil, code: String? = nil, message: String) {
+        self.hint = hint
+        self.details = details
+        self.code = code
         self.message = message
     }
 }

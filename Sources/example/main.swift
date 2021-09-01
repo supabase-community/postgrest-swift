@@ -17,9 +17,7 @@ struct Todo: Codable {
 database.from("todo").select().execute { result in
     switch result {
     case let .success(response):
-        guard let data = response.body as? Data else {
-            return
-        }
+        let data = response.data
         do {
             let todos = try JSONDecoder().decode([Todo].self, from: data)
             print(todos)
@@ -38,9 +36,7 @@ do {
     database.from("todo").insert(values: jsonData).execute { result in
         switch result {
         case let .success(response):
-            guard let data = response.body as? Data else {
-                return
-            }
+            let data = response.data
             do {
                 let todos = try JSONDecoder().decode([Todo].self, from: data)
                 print(todos)

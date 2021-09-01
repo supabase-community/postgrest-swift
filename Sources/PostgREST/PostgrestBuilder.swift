@@ -73,11 +73,7 @@ public class PostgrestBuilder {
             return
         }
 
-        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-            throw PostgrestError(message: "failed to get error")
-        }
-
-        throw PostgrestError(from: json) ?? PostgrestError(message: "failed to get error")
+        throw try JSONDecoder().decode(PostgrestError.self, from: data)
     }
 
     /// Parses incoming data and server response into a `PostgrestResponse`
@@ -87,16 +83,7 @@ public class PostgrestBuilder {
     /// - Throws: Throws an `Error` if invalid JSON.
     /// - Returns: Returns a `PostgrestResponse`
     private static func parse(data: Data, response: HTTPURLResponse, request: URLRequest) throws -> PostgrestResponse {
-        var body: Any = data
         var count: Int?
-
-        if request.httpMethod == "HEAD" {
-            if let accept = response.allHeaderFields["Accept"] as? String, accept == "text/csv" {
-                body = data
-            } else {
-                try JSONSerialization.jsonObject(with: data, options: [])
-            }
-        }
 
         if let contentRange = response.allHeaderFields["content-range"] as? String,
            let lastElement = contentRange.split(separator: "/").last
@@ -104,9 +91,7 @@ public class PostgrestBuilder {
             count = lastElement == "*" ? nil : Int(lastElement)
         }
 
-        let postgrestResponse = PostgrestResponse(body: body)
-        postgrestResponse.status = response.statusCode
-        postgrestResponse.count = count
+        let postgrestResponse = PostgrestResponse(data: data, status: response.statusCode, count: count)
         return postgrestResponse
     }
 
@@ -133,9 +118,7 @@ public class PostgrestBuilder {
             throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
         }
 
-//        if method == "GET" || method == "HEAD" {
         headers["Content-Type"] = "application/json"
-//        }
 
         if let schema = schema {
             if method == "GET" || method == "HEAD" {
@@ -144,7 +127,7 @@ public class PostgrestBuilder {
                 headers["Content-Profile"] = schema
             }
         }
-
+        
         guard var components = URLComponents(string: url) else {
             throw PostgrestError(message: "badURL")
         }

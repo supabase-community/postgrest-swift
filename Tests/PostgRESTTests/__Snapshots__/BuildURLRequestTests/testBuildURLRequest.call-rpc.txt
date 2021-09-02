@@ -1,4 +1,5 @@
 curl \
 	--request POST \
+	--header "Content-Type: application/json" \
 	--data "{\"KEY\":\"VALUE\"}" \
 	"https://example.supabase.co/rpc/test_fcn"

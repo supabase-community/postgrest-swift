@@ -4,9 +4,15 @@
  This is the main class in this package. Use it to execute queries on a PostgREST instance on Supabase.
  */
 public class PostgrestClient {
-    var url: String
-    var headers: [String: String]
-    var schema: String?
+    /// Configuration for the client
+    public var config: PostgrestClientConfig
+    
+    /// Struct for PostgrestClient config options
+    public struct PostgrestClientConfig {
+        public var url: String
+        public var headers: [String: String]
+        public var schema: String?
+    }
 
     /// Initializes the `PostgrestClient` with the correct parameters.
     /// - Parameters:
@@ -14,16 +20,16 @@ public class PostgrestClient {
     ///   - headers: Headers to include when querying the database. Eg, an authentication header
     ///   - schema: Schema ID to use
     public init(url: String, headers: [String: String] = [:], schema: String?) {
-        self.url = url
-        self.headers = headers
-        self.schema = schema
+        self.config = PostgrestClientConfig(url: url,
+                                            headers: headers,
+                                            schema: schema)
     }
 
     /// Select a table to query from
     /// - Parameter table: The ID of the table to query
     /// - Returns: `PostgrestQueryBuilder`
     public func from(_ table: String) -> PostgrestQueryBuilder {
-        return PostgrestQueryBuilder(url: "\(url)/\(table)", queryParams: [], headers: headers, schema: schema, method: nil, body: nil)
+        return PostgrestQueryBuilder(url: "\(config.url)/\(table)", queryParams: [], headers: config.headers, schema: config.schema, method: nil, body: nil)
     }
 
     /// Call a stored procedure, aka a "Remote Procedure Call"
@@ -32,6 +38,6 @@ public class PostgrestClient {
     ///   - parameters: Parameters to pass to the procedure.
     /// - Returns: `PostgrestTransformBuilder`
     public func rpc(fn: String, parameters: [String: Any]?) -> PostgrestTransformBuilder {
-        return PostgrestRpcBuilder(url: "\(url)/rpc/\(fn)", queryParams: [], headers: headers, schema: schema, method: nil, body: nil).rpc(parameters: parameters)
+        return PostgrestRpcBuilder(url: "\(config.url)/rpc/\(fn)", queryParams: [], headers: config.headers, schema: config.schema, method: nil, body: nil).rpc(parameters: parameters)
     }
 }

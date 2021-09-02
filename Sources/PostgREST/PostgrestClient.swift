@@ -24,6 +24,12 @@ public class PostgrestClient {
                                             headers: headers,
                                             schema: schema)
     }
+    
+    /// Initializes the `PostgrestClient` with a config object
+    /// - Parameter config: A `PostgrestClientConfig` struct with the correct parameters
+    public init(config: PostgrestClientConfig) {
+        self.config = config
+    }
 
     /// Select a table to query from
     /// - Parameter table: The ID of the table to query

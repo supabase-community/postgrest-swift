@@ -2,7 +2,7 @@
 
 ## Installation
 
-Swift client for [PostgREST](https://postgrest.org). The goal of this library is to make an "ORM-like" restful interface.
+Swift client for [PostgREST](https://postgrest.org). The goal of this library is to make an "ORM-like" restful interface. 
 
 ### Swift Package Manager
 

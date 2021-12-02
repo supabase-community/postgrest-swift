@@ -77,39 +77,13 @@ do {
 semaphore.wait()
 ```
 
-Execute an RPC
-
-```swift
-let client = PostgrestClient(url: "https://example.supabase.co", schema: nil)
-
-do {
-    try client.rpc(fn: "testFunction", parameters: nil).execute { result in
-        // Handle result
-    }
-} catch {
-   print("Error executing the RPC: \(error)")
-}
-```
-
-## Auth
-
-You can add authentication to the databases requests by using the `client.headers` property. For example to add a `Bearer` auth header, simply set the headers dictionary to:
-
-```swift
-let client = PostgrestClient(url: "https://example.supabase.co",
-                             headers: ["Bearer": "{ Insert Token Here }"]
-                             schema: nil)
-```
-
-All requests made using this client will be sent with the `Bearer Token` header.
-
 ## Contributing
 
--   Fork the repo on GitHub
--   Clone the project to your own machine
--   Commit changes to your own branch
--   Push your work back up to your fork
--   Submit a Pull request so that we can review your changes and merge
+-  Fork the repo on GitHub
+-  Clone the project to your own machine
+-  Commit changes to your own branch
+-  Push your work back up to your fork
+-  Submit a Pull request so that we can review your changes and merge
 
 ## License
 

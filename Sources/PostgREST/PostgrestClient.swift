@@ -44,10 +44,21 @@ public class PostgrestClient {
   ///   - fn: Procedure name to call.
   ///   - parameters: Parameters to pass to the procedure.
   /// - Returns: `PostgrestTransformBuilder`
-  public func rpc(fn: String, parameters: [String: Any]?) -> PostgrestTransformBuilder {
+  public func rpc<U: Encodable>(fn: String, parameters: U?) -> PostgrestTransformBuilder {
     return PostgrestRpcBuilder(
       url: "\(config.url)/rpc/\(fn)", queryParams: [], headers: config.headers,
       schema: config.schema, method: nil, body: nil
     ).rpc(parameters: parameters)
+  }
+
+  /// Call a stored procedure, aka a "Remote Procedure Call"
+  /// - Parameters:
+  ///   - fn: Procedure name to call.
+  /// - Returns: `PostgrestTransformBuilder`
+  public func rpc(fn: String) -> PostgrestTransformBuilder {
+    return PostgrestRpcBuilder(
+      url: "\(config.url)/rpc/\(fn)", queryParams: [], headers: config.headers,
+      schema: config.schema, method: nil, body: nil
+    ).rpc()
   }
 }

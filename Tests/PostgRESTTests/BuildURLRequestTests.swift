@@ -32,6 +32,10 @@ final class BuildURLRequestTests: XCTestCase {
         try client.rpc(fn: "test_fcn", parameters: ["KEY": "VALUE"])
           .buildURLRequest(head: false, count: nil)
       },
+      TestCase(name: "call rpc without parameter") { client in
+        try client.rpc(fn: "test_fcn")
+          .buildURLRequest(head: false, count: nil)
+      },
     ]
 
     for testCase in testCases {

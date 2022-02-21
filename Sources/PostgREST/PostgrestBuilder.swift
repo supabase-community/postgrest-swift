@@ -1,3 +1,4 @@
+import AnyCodable
 import Foundation
 
 public class PostgrestBuilder {
@@ -6,11 +7,11 @@ public class PostgrestBuilder {
   var headers: [String: String]
   var schema: String?
   var method: String?
-  var body: Any?
+  var body: AnyEncodable?
 
   init(
     url: String, queryParams: [(name: String, value: String)], headers: [String: String],
-    schema: String?, method: String?, body: Any?
+    schema: String?, method: String?, body: AnyEncodable?
   ) {
     self.url = url
     self.queryParams = queryParams
@@ -152,11 +153,7 @@ public class PostgrestBuilder {
     request.httpMethod = method
     request.allHTTPHeaderFields = headers
     if let body = body {
-      if let httpBody = body as? Data {
-        request.httpBody = httpBody
-      } else {
-        request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-      }
+      request.httpBody = try JSONEncoder().encode(body)
     }
     return request
   }

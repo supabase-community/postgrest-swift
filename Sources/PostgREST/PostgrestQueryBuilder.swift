@@ -1,3 +1,5 @@
+import AnyCodable
+
 public class PostgrestQueryBuilder: PostgrestBuilder {
   public func select(columns: String = "*") -> PostgrestFilterBuilder {
     method = "GET"
@@ -18,8 +20,8 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     )
   }
 
-  public func insert(
-    values: Any, upsert: Bool = false, onConflict: String? = nil,
+  public func insert<U: Encodable>(
+    values: U, upsert: Bool = false, onConflict: String? = nil,
     returning: PostgrestReturningOptions = .representation
   ) -> PostgrestBuilder {
     method = "POST"
@@ -30,12 +32,12 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
 
-    body = values
+    body = AnyEncodable(values)
     return self
   }
 
-  public func upsert(
-    values: Any, onConflict: String? = nil, returning: PostgrestReturningOptions = .representation
+  public func upsert<U: Encodable>(
+    values: U, onConflict: String? = nil, returning: PostgrestReturningOptions = .representation
   ) -> PostgrestBuilder {
     method = "POST"
     headers["Prefer"] = "return=\(returning.rawValue),resolution=merge-duplicates"
@@ -43,16 +45,18 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
 
-    body = values
+    body = AnyEncodable(values)
     return self
   }
 
-  public func update(values: Any, returning: PostgrestReturningOptions = .representation)
+  public func update<U: Encodable>(
+    values: U, returning: PostgrestReturningOptions = .representation
+  )
     -> PostgrestFilterBuilder
   {
     method = "PATCH"
     headers["Prefer"] = "return=\(returning.rawValue)"
-    body = values
+    body = AnyEncodable(values)
     return PostgrestFilterBuilder(
       url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
       body: body

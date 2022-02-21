@@ -50,4 +50,15 @@ public class PostgrestClient {
       schema: config.schema, method: nil, body: nil
     ).rpc(parameters: parameters)
   }
+
+  /// Call a stored procedure, aka a "Remote Procedure Call"
+  /// - Parameters:
+  ///   - fn: Procedure name to call.
+  /// - Returns: `PostgrestTransformBuilder`
+  public func rpc(fn: String) -> PostgrestTransformBuilder {
+    return PostgrestRpcBuilder(
+      url: "\(config.url)/rpc/\(fn)", queryParams: [], headers: config.headers,
+      schema: config.schema, method: nil, body: nil
+    ).rpc()
+  }
 }

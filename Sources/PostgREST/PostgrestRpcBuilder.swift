@@ -12,4 +12,15 @@ public class PostgrestRpcBuilder: PostgrestBuilder {
       method: method,
       body: body)
   }
+
+  public func rpc() -> PostgrestTransformBuilder {
+    method = "POST"
+    return PostgrestTransformBuilder(
+      url: url,
+      queryParams: queryParams,
+      headers: headers,
+      schema: schema,
+      method: method,
+      body: body)
+  }
 }

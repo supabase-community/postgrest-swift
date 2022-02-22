@@ -23,7 +23,7 @@ struct NewTodo: Codable, Hashable {
   }
 }
 
-@available(iOS 15.0.0, *)
+@available(iOS 15.0.0, macOS 12.0.0, *)
 final class IntegrationTests: XCTestCase {
   func testIntegration() async throws {
     let client = PostgrestClient(

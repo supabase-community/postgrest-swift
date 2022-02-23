@@ -23,9 +23,13 @@ struct NewTodo: Codable, Hashable {
   }
 }
 
-@available(iOS 15.0.0, macOS 12.0.0, *)
+@available(iOS 15.0.0, macOS 12.0.0, tvOS 13.0, *)
 final class IntegrationTests: XCTestCase {
   func testIntegration() async throws {
+    if ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] == nil {
+      throw XCTSkip("INTEGRATION_TESTS not defined.")
+    }
+
     let client = PostgrestClient(
       url: "http://localhost:54321/rest/v1",
       headers: [

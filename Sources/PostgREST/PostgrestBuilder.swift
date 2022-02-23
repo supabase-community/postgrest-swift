@@ -1,5 +1,9 @@
 import AnyCodable
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 
 public class PostgrestBuilder {
   var url: String

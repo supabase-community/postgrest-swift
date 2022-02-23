@@ -7,13 +7,11 @@ on:
     branches: [ master ]
 
 jobs:
-  build-and-test:
+  test-all:
 
     runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: swift build
     - name: Run tests
       run: make test-all

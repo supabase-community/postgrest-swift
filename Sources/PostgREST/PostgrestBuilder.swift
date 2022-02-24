@@ -1,9 +1,9 @@
 import AnyCodable
 import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
 
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
 
 public class PostgrestBuilder {
   var url: String
@@ -52,12 +52,12 @@ public class PostgrestBuilder {
         }
 
         guard let response = response as? HTTPURLResponse else {
-          completion(.failure(PostgrestError(message: "failed to get response")))
+          completion(.failure(URLError(.badServerResponse)))
           return
         }
 
         guard let data = data else {
-          completion(.failure(PostgrestError(message: "empty data")))
+          completion(.failure(URLError(.badServerResponse)))
           return
         }
 
@@ -141,7 +141,7 @@ public class PostgrestBuilder {
     }
 
     guard var components = URLComponents(string: url) else {
-      throw PostgrestError(message: "badURL")
+      throw URLError(.badURL)
     }
 
     if !queryParams.isEmpty {
@@ -150,7 +150,7 @@ public class PostgrestBuilder {
     }
 
     guard let url = components.url else {
-      throw PostgrestError(message: "badURL")
+      throw URLError(.badURL)
     }
 
     var request = URLRequest(url: url)

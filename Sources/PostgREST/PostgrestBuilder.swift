@@ -157,7 +157,7 @@ public class PostgrestBuilder {
     request.httpMethod = method
     request.allHTTPHeaderFields = headers
     if let body = body {
-      request.httpBody = try JSONEncoder().encode(body)
+      request.httpBody = try JSONEncoder.postgrest.encode(body)
     }
     return request
   }
@@ -165,4 +165,21 @@ public class PostgrestBuilder {
   func appendSearchParams(name: String, value: String) {
     queryParams.append((name, value))
   }
+}
+
+extension JSONEncoder {
+  /// Default JSONEncoder instance used by PostgREST library.
+  public static var postgrest = { () -> JSONEncoder in
+    let encoder = JSONEncoder()
+    if #available(macOS 10.12, *) {
+      encoder.dateEncodingStrategy = .iso8601
+    } else {
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+      formatter.timeZone = TimeZone(secondsFromGMT: 0)
+      encoder.dateEncodingStrategy = .formatted(formatter)
+    }
+    return encoder
+  }()
 }

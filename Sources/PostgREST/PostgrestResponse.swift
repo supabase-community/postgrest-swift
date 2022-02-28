@@ -10,6 +10,18 @@ public struct PostgrestResponse: Hashable {
     self.status = status
     self.count = count
   }
+
+  public init(data: Data, response: HTTPURLResponse) {
+    var count: Int?
+
+    if let contentRange = response.allHeaderFields["content-range"] as? String,
+      let lastElement = contentRange.split(separator: "/").last
+    {
+      count = lastElement == "*" ? nil : Int(lastElement)
+    }
+
+    self.init(data: data, status: response.statusCode, count: count)
+  }
 }
 
 extension PostgrestResponse {

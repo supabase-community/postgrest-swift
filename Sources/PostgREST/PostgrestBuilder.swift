@@ -31,7 +31,8 @@ public class PostgrestBuilder {
   ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
   ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`. Called after API call is completed and validated.
   public func execute(
-    head: Bool = false, count: CountOption? = nil,
+    head: Bool = false,
+    count: CountOption? = nil,
     completion: @escaping (Result<PostgrestResponse, Error>) -> Void
   ) {
     let request: URLRequest
@@ -63,7 +64,7 @@ public class PostgrestBuilder {
 
         do {
           try Self.validate(data: data, response: response)
-          let response = try Self.parse(data: data, response: response, request: request)
+          let response = PostgrestResponse(data: data, response: response)
           completion(.success(response))
         } catch {
           completion(.failure(error))
@@ -83,28 +84,7 @@ public class PostgrestBuilder {
       return
     }
 
-    throw try JSONDecoder().decode(PostgrestError.self, from: data)
-  }
-
-  /// Parses incoming data and server response into a `PostgrestResponse`
-  /// - Parameters:
-  ///   - data: Data received from the server
-  ///   - response: Response received from the server
-  /// - Throws: Throws an `Error` if invalid JSON.
-  /// - Returns: Returns a `PostgrestResponse`
-  private static func parse(data: Data, response: HTTPURLResponse, request: URLRequest) throws
-    -> PostgrestResponse
-  {
-    var count: Int?
-
-    if let contentRange = response.allHeaderFields["content-range"] as? String,
-      let lastElement = contentRange.split(separator: "/").last
-    {
-      count = lastElement == "*" ? nil : Int(lastElement)
-    }
-
-    let postgrestResponse = PostgrestResponse(data: data, status: response.statusCode, count: count)
-    return postgrestResponse
+    throw try JSONDecoder.postgrest.decode(PostgrestError.self, from: data)
   }
 
   /// Builds the URL request for PostgREST

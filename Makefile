@@ -28,5 +28,10 @@ format:
 		--recursive \
 		./Package.swift ./Sources ./Tests
 
+supabase-up: supabase-down
+	supabase start && supabase db reset
+
+supabase-down:
+	supabase stop
 
 .PHONY: format test-all test-ios test-macos test-tvos

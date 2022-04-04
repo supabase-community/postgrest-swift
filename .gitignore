@@ -94,3 +94,6 @@ iOSInjectionProject/
 /Packages
 /*.xcodeproj
 /.swiftpm
+# Supabase
+**/supabase/.branches
+**/supabase/.temp

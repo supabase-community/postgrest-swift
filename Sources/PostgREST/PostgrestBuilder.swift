@@ -27,7 +27,7 @@ public class PostgrestBuilder {
 
   /// Executes the built query or command.
   /// - Parameters:
-  ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `true`
+  ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `false`
   ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
   ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`. Called after API call is completed and validated.
   public func execute(

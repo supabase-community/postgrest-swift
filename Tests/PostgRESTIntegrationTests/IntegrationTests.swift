@@ -71,12 +71,12 @@ final class IntegrationTests: XCTestCase {
 
     let completedTodos = try await client.from("todo")
       .select()
-      .eq(column: "is_complete", value: "true")
+      .eq(column: "is_complete", value: true)
       .execute()
       .decoded(to: [Todo].self)
     XCTAssertEqual(completedTodos, [updatedTodo])
 
-    try await client.from("todo").delete().eq(column: "is_complete", value: "true").execute()
+    try await client.from("todo").delete().eq(column: "is_complete", value: true).execute()
     todos = try await client.from("todo").select().execute().decoded(to: [Todo].self)
     XCTAssertTrue(completedTodos.allSatisfy { todo in !todos.contains(todo) })
   }

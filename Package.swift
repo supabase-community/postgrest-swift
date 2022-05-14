@@ -9,6 +9,7 @@ let package = Package(
     .iOS(.v11),
     .macOS(.v10_10),
     .tvOS(.v10),
+    .watchOS(.v3),
   ],
   products: [
     .library(
@@ -30,7 +31,14 @@ let package = Package(
     ),
     .testTarget(
       name: "PostgRESTTests",
-      dependencies: ["PostgREST", "SnapshotTesting"],
+      dependencies: [
+        "PostgREST",
+        .product(
+          name: "SnapshotTesting",
+          package: "SnapshotTesting",
+          condition: .when(platforms: [.iOS, .macOS, .tvOS])
+        ),
+      ],
       exclude: [
         "__Snapshots__"
       ]

@@ -1,5 +1,9 @@
 import Foundation
 
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
+
 public struct PostgrestResponse: Hashable {
   public let data: Data
   public let status: Int

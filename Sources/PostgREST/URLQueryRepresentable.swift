@@ -19,5 +19,5 @@ extension Double: URLQueryRepresentable {
 }
 
 extension Bool: URLQueryRepresentable {
-    public var queryValue: String { "\(self)" }
+  public var queryValue: String { "\(self)" }
 }

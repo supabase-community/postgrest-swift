@@ -9,7 +9,7 @@ Swift client for [PostgREST](https://postgrest.org). The goal of this library is
 Add `postgrest-swift` as a dependency to your `Package.swift` file. For more information, please see the [Swift Package Manager documentation](https://github.com/apple/swift-package-manager/tree/master/Documentation).
 
 ```swift
-.package(url: "https://github.com/supabase/postgrest-swift", .exact("0.0.1"))
+.package(url: "https://github.com/supabase/postgrest-swift", .exact("0.0.2"))
 ```
 
 ### Supabase
@@ -30,51 +30,50 @@ var database = PostgrestClient(
     headers: ["apikey": supabaseKey],
     schema: "public")
 
-let semaphore = DispatchSemaphore(value: 0)
+struct Todo: Codable, Hashable {
+  let id: UUID
+  var description: String
+  var isComplete: Bool
 
-struct Todo: Codable {
-    var id: Int?
-    var task: String?
-    var completed: Bool?
+  enum CodingKeys: String, CodingKey {
+    case id
+    case description
+    case isComplete = "is_complete"
+  }
 }
 
-database.from("todo").select().execute { result in
-    switch result {
-    case let .success(response):
-        do {
-            let todos = try response.decoded(to: [Todo].self)
-            print(todos)
-        } catch {
-            print(error.localizedDescription)
-        }
-    case let .failure(error):
-        print(error.localizedDescription)
-    }
+struct NewTodo: Codable, Hashable {
+  var description: String
+  var isComplete: Bool = false
+
+  enum CodingKeys: String, CodingKey {
+    case description
+    case isComplete = "is_complete"
+  }
 }
 
-do {
-    let todo = Todo(task: "fix some issues in postgrest-swift", completed: true)
-    let jsonData: Data = try JSONEncoder().encode(todo)
+// Get todos
+var todos = try await client
+    .from("todo")
+    .select()
+    .execute()
+    .decoded(to: [Todo].self)
 
-    database.from("todo").insert(values: jsonData).execute { result in
-        switch result {
-        case let .success(response):
-            do {
-                let todos = try response.decoded(to: [Todo].self)
-                print(todos)
-            } catch {
-                print(error.localizedDescription)
-            }
-        case let .failure(error):
-            print(error.localizedDescription)
-        }
-    }
+// Insert a todo
+let insertedTodo = try await client.from("todo")
+    .insert(values: NewTodo(description: "Implement integration tests for postgrest-swift"))
+    .execute()
+    .decoded(to: [Todo].self)[0]
 
-} catch {
-    print(error.localizedDescription)
-}
+// Insert multiple todos
+let insertedTodos = try await client.from("todo")
+    .insert(values: [
+        NewTodo(description: "Make supabase swift libraries production ready"),
+        NewTodo(description: "Drink some coffee"),
+    ])
+    .execute()
+    .decoded(to: [Todo].self)
 
-semaphore.wait()
 ```
 
 ## Contributing

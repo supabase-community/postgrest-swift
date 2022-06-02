@@ -12,10 +12,16 @@ public class PostgrestBuilder {
   var schema: String?
   var method: String?
   var body: AnyEncodable?
+  var fetch: Fetch
 
   init(
-    url: String, queryParams: [(name: String, value: String)], headers: [String: String],
-    schema: String?, method: String?, body: AnyEncodable?
+    url: String,
+    queryParams: [(name: String, value: String)] = [],
+    headers: [String: String],
+    schema: String?,
+    method: String?,
+    body: AnyEncodable?,
+    fetch: Fetch?
   ) {
     self.url = url
     self.queryParams = queryParams
@@ -23,6 +29,19 @@ public class PostgrestBuilder {
     self.schema = schema
     self.method = method
     self.body = body
+    self.fetch = fetch ?? URLSession.shared.fetch
+  }
+
+  convenience init(_ other: PostgrestBuilder) {
+    self.init(
+      url: other.url,
+      queryParams: other.queryParams,
+      headers: other.headers,
+      schema: other.schema,
+      method: other.method,
+      body: other.body,
+      fetch: other.fetch
+    )
   }
 
   /// Executes the built query or command.
@@ -43,25 +62,11 @@ public class PostgrestBuilder {
       return
     }
 
-    let session = URLSession.shared
-    let dataTask = session.dataTask(
-      with: request,
-      completionHandler: { data, response, error -> Void in
-        if let error = error {
-          completion(.failure(error))
-          return
-        }
-
-        guard let response = response as? HTTPURLResponse else {
-          completion(.failure(URLError(.badServerResponse)))
-          return
-        }
-
-        guard let data = data else {
-          completion(.failure(URLError(.badServerResponse)))
-          return
-        }
-
+    fetch(request) { result in
+      switch result {
+      case .failure(let error):
+        completion(.failure(error))
+      case let .success((data, response)):
         do {
           try Self.validate(data: data, response: response)
           let response = PostgrestResponse(data: data, response: response)
@@ -69,9 +74,8 @@ public class PostgrestBuilder {
         } catch {
           completion(.failure(error))
         }
-      })
-
-    dataTask.resume()
+      }
+    }
   }
 
   /// Validates the response from PostgREST
@@ -162,4 +166,29 @@ extension JSONEncoder {
     }
     return encoder
   }()
+}
+
+extension URLSession {
+  func fetch(_ request: URLRequest, completion: @escaping Completion) {
+    let dataTask = dataTask(with: request) { data, response, error in
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let httpResponse = response as? HTTPURLResponse else {
+        completion(.failure(URLError(.badServerResponse)))
+        return
+      }
+
+      guard let data = data else {
+        completion(.failure(URLError(.badServerResponse)))
+        return
+      }
+
+      completion(.success((data, httpResponse)))
+    }
+
+    dataTask.resume()
+  }
 }

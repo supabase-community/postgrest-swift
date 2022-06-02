@@ -1,8 +1,18 @@
 import AnyCodable
 
 public class PostgrestQueryBuilder: PostgrestBuilder {
-  public func select(columns: String = "*") -> PostgrestFilterBuilder {
+  /// Performs a vertical filtering with SELECT.
+  /// - Parameters:
+  ///   - columns: The columns to retrieve, separated by commas.
+  ///   - head: When set to true, select will void data.
+  ///   - count: Count algorithm to use to count rows in a table.
+  public func select(
+    columns: String = "*",
+    head: Bool = false,
+    count: CountOption? = nil
+  ) -> PostgrestFilterBuilder {
     method = "GET"
+    // remove whitespaces except when quoted.
     var quoted = false
     let cleanedColumns = columns.compactMap { char -> String? in
       if char.isWhitespace, !quoted {
@@ -12,65 +22,123 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
         quoted = !quoted
       }
       return String(char)
-    }.reduce("", +)
+    }
+    .joined(separator: "")
     appendSearchParams(name: "select", value: cleanedColumns)
-    return PostgrestFilterBuilder(
-      url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-      body: body
-    )
+    if let count = count {
+      headers["Prefer"] = "count=\(count.rawValue)"
+    }
+    if head {
+      method = "HEAD"
+    }
+    return PostgrestFilterBuilder(self)
   }
 
   public func insert<U: Encodable>(
-    values: U, upsert: Bool = false, onConflict: String? = nil,
-    returning: PostgrestReturningOptions = .representation
-  ) -> PostgrestBuilder {
+    values: U,
+    returning: PostgrestReturningOptions? = nil,
+    count: CountOption? = nil
+  ) -> PostgrestFilterBuilder {
     method = "POST"
-    headers["Prefer"] =
-      upsert
-      ? "return=\(returning.rawValue),resolution=merge-duplicates" : "return=\(returning.rawValue)"
-    if let onConflict = onConflict {
-      appendSearchParams(name: "on_conflict", value: onConflict)
+    var prefersHeaders: [String] = []
+    if let returning = returning {
+      prefersHeaders.append("return=\(returning.rawValue)")
     }
-
     body = AnyEncodable(values)
-    return self
+    if let count = count {
+      prefersHeaders.append("count=\(count.rawValue)")
+    }
+    if let prefer = headers["Prefer"] {
+      prefersHeaders.insert(prefer, at: 0)
+    }
+    headers["Prefer"] = prefersHeaders.joined(separator: ",")
+
+    // TODO: How to do this in Swift?
+    // if (Array.isArray(values)) {
+    //     const columns = values.reduce((acc, x) => acc.concat(Object.keys(x)), [] as string[])
+    //     if (columns.length > 0) {
+    //         const uniqueColumns = [...new Set(columns)].map((column) => `"${column}"`)
+    //         this.url.searchParams.set('columns', uniqueColumns.join(','))
+    //     }
+    // }
+
+    return PostgrestFilterBuilder(self)
   }
 
+  /// Performs an UPSERT into the table.
+  /// - Parameters:
+  ///   - values: The values to insert.
+  ///   - onConflict: By specifying the `on_conflict` query parameter, you can make UPSERT work on a column(s) that has a unique constraint.
+  ///   - returning: By default the new record is returned. Set this to `minimal` if you don't need this value.
+  ///   - count: Count algorithm to use to count rows in a table.
+  ///   - ignoreDuplicates: Specifies if duplicate rows should be ignored and not inserted.
   public func upsert<U: Encodable>(
-    values: U, onConflict: String? = nil, returning: PostgrestReturningOptions = .representation
-  ) -> PostgrestBuilder {
+    values: U,
+    onConflict: String? = nil,
+    returning: PostgrestReturningOptions = .representation,
+    count: CountOption? = nil,
+    ignoreDuplicates: Bool? = nil
+  ) -> PostgrestFilterBuilder {
     method = "POST"
-    headers["Prefer"] = "return=\(returning.rawValue),resolution=merge-duplicates"
+    var prefersHeaders = [
+      ignoreDuplicates.map { "resolution=\($0 ? "ignore" : "merge")-duplicates" },
+      "return=\(returning.rawValue)",
+    ]
+    .compactMap { $0 }
     if let onConflict = onConflict {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
-
     body = AnyEncodable(values)
-    return self
+    if let count = count {
+      prefersHeaders.append("count=\(count.rawValue)")
+    }
+    if let prefer = headers["Prefer"] {
+      prefersHeaders.insert(prefer, at: 0)
+    }
+    headers["Prefer"] = prefersHeaders.joined(separator: ",")
+    return PostgrestFilterBuilder(self)
   }
 
+  /// Performs an UPDATE on the table.
+  /// - Parameters:
+  ///   - values: The values to update.
+  ///   - returning: By default the updated record is returned. Set this to `minimal` if you don't need this value.
+  ///   - count: Count algorithm to use to count rows in a table.
   public func update<U: Encodable>(
-    values: U, returning: PostgrestReturningOptions = .representation
-  )
-    -> PostgrestFilterBuilder
-  {
+    values: U,
+    returning: PostgrestReturningOptions = .representation,
+    count: CountOption? = nil
+  ) -> PostgrestFilterBuilder {
     method = "PATCH"
-    headers["Prefer"] = "return=\(returning.rawValue)"
+    var preferHeaders = ["return=\(returning.rawValue)"]
     body = AnyEncodable(values)
-    return PostgrestFilterBuilder(
-      url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-      body: body
-    )
+    if let count = count {
+      preferHeaders.append("count=\(count.rawValue)")
+    }
+    if let prefer = headers["Prefer"] {
+      preferHeaders.insert(prefer, at: 0)
+    }
+    headers["Prefer"] = preferHeaders.joined(separator: ",")
+    return PostgrestFilterBuilder(self)
   }
 
-  public func delete(returning: PostgrestReturningOptions = .representation)
-    -> PostgrestFilterBuilder
-  {
+  /// Performs a DELETE on the table.
+  /// - Parameters:
+  ///   - returning: By default the deleted rows are returned. Set this to `minimal` if you don't need this value.
+  ///   - count: Count algorithm to use to count rows in a table.
+  public func delete(
+    returning: PostgrestReturningOptions = .representation,
+    count: CountOption? = nil
+  ) -> PostgrestFilterBuilder {
     method = "DELETE"
-    headers["Prefer"] = "return=\(returning.rawValue)"
-    return PostgrestFilterBuilder(
-      url: url, queryParams: queryParams, headers: headers, schema: schema, method: method,
-      body: body
-    )
+    var preferHeaders = ["return=\(returning.rawValue)"]
+    if let count = count {
+      preferHeaders.append("count=\(count.rawValue)")
+    }
+    if let prefer = headers["Prefer"] {
+      preferHeaders.insert(prefer, at: 0)
+    }
+    headers["Prefer"] = preferHeaders.joined(separator: ",")
+    return PostgrestFilterBuilder(self)
   }
 }

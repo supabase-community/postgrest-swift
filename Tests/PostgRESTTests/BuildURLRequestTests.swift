@@ -19,7 +19,7 @@
     }
 
     func testBuildURLRequest() throws {
-      let client = PostgrestClient(url: url, schema: nil)
+      let client = PostgrestClient(url: url, fetch: nil, schema: nil)
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in

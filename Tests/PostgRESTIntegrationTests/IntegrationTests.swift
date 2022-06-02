@@ -25,25 +25,37 @@ struct NewTodo: Codable, Hashable {
 
 @available(iOS 15.0.0, macOS 12.0.0, tvOS 13.0, *)
 final class IntegrationTests: XCTestCase {
-  func testIntegration() async throws {
-    if ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] == nil {
-      throw XCTSkip("INTEGRATION_TESTS not defined.")
-    }
+  let client = PostgrestClient(
+    url: "http://localhost:54321/rest/v1",
+    headers: [
+      "apikey":
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs"
+    ],
+    fetch: nil,
+    schema: "public"
+  )
 
-    let client = PostgrestClient(
-      url: "http://localhost:54321/rest/v1",
-      headers: [
-        "apikey":
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs"
-      ],
-      schema: "public"
+  override func setUp() async throws {
+    try await super.setUp()
+
+    try XCTSkipUnless(
+      ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] != nil,
+      "INTEGRATION_TESTS not defined."
     )
 
+    // Run fresh test by deleting all todos.
+    try await client.from("todo").delete().execute()
+  }
+
+  func testIntegration() async throws {
     var todos = try await client.from("todo").select().execute().decoded(to: [Todo].self)
     XCTAssertEqual(todos, [])
 
     let insertedTodo = try await client.from("todo")
-      .insert(values: NewTodo(description: "Implement integration tests for postgrest-swift"))
+      .insert(
+        values: NewTodo(description: "Implement integration tests for postgrest-swift"),
+        returning: .representation
+      )
       .execute()
       .decoded(to: [Todo].self)[0]
 
@@ -51,10 +63,13 @@ final class IntegrationTests: XCTestCase {
     XCTAssertEqual(todos, [insertedTodo])
 
     let insertedTodos = try await client.from("todo")
-      .insert(values: [
-        NewTodo(description: "Make supabase swift libraries production ready"),
-        NewTodo(description: "Drink some coffee"),
-      ])
+      .insert(
+        values: [
+          NewTodo(description: "Make supabase swift libraries production ready"),
+          NewTodo(description: "Drink some coffee"),
+        ],
+        returning: .representation
+      )
       .execute()
       .decoded(to: [Todo].self)
 

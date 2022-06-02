@@ -19,7 +19,7 @@
     }
 
     func testBuildURLRequest() throws {
-      let client = PostgrestClient(url: url, schema: nil)
+      let client = PostgrestClient(url: url, fetch: nil, schema: nil)
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
@@ -34,7 +34,7 @@
             .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc") { client in
-          try client.rpc(fn: "test_fcn", parameters: ["KEY": "VALUE"])
+          try client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
             .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc without parameter") { client in

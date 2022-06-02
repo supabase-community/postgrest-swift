@@ -1,6 +1,6 @@
 import AnyCodable
 
-public class PostgrestQueryBuilder: PostgrestBuilder {
+public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs a vertical filtering with SELECT.
   /// - Parameters:
   ///   - columns: The columns to retrieve, separated by commas.
@@ -51,7 +51,9 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     if let prefer = headers["Prefer"] {
       prefersHeaders.insert(prefer, at: 0)
     }
-    headers["Prefer"] = prefersHeaders.joined(separator: ",")
+    if prefersHeaders.isEmpty == false {
+      headers["Prefer"] = prefersHeaders.joined(separator: ",")
+    }
 
     // TODO: How to do this in Swift?
     // if (Array.isArray(values)) {
@@ -95,7 +97,9 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     if let prefer = headers["Prefer"] {
       prefersHeaders.insert(prefer, at: 0)
     }
-    headers["Prefer"] = prefersHeaders.joined(separator: ",")
+    if prefersHeaders.isEmpty == false {
+      headers["Prefer"] = prefersHeaders.joined(separator: ",")
+    }
     return PostgrestFilterBuilder(self)
   }
 
@@ -118,7 +122,9 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     if let prefer = headers["Prefer"] {
       preferHeaders.insert(prefer, at: 0)
     }
-    headers["Prefer"] = preferHeaders.joined(separator: ",")
+    if preferHeaders.isEmpty == false {
+      headers["Prefer"] = preferHeaders.joined(separator: ",")
+    }
     return PostgrestFilterBuilder(self)
   }
 
@@ -138,7 +144,9 @@ public class PostgrestQueryBuilder: PostgrestBuilder {
     if let prefer = headers["Prefer"] {
       preferHeaders.insert(prefer, at: 0)
     }
-    headers["Prefer"] = preferHeaders.joined(separator: ",")
+    if preferHeaders.isEmpty == false {
+      headers["Prefer"] = preferHeaders.joined(separator: ",")
+    }
     return PostgrestFilterBuilder(self)
   }
 }

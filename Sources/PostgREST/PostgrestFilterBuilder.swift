@@ -227,48 +227,4 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
   {
     wfts(column: column, query: query, config: config)
   }
-
-  // MARK: - Modifiers
-
-  /// Limits the number of results returned by the query
-  /// https://supabase.io/docs/reference/javascript/limit
-  /// - Parameter limit: Number of results to return
-  public func limit(_ limit: Int) -> PostgrestFilterBuilder {
-    appendSearchParams(name: "limit", value: String(limit))
-    return self
-  }
-
-  /// Offsets the query by a number of results. Useful for paginating queries
-  /// https://postgrest.org/en/v8.0/api.html#limits-and-pagination
-  /// - Parameter offset: Number of results to offset by
-  public func offset(_ offset: Int) -> PostgrestFilterBuilder {
-    appendSearchParams(name: "offset", value: String(offset))
-    return self
-  }
-
-  /// Limits a query to a range of values
-  /// Eg: 15 - 30 gets the results from 15 -> 30
-  /// https://supabase.io/docs/reference/javascript/range
-  /// - Parameters:
-  ///   - offset: The start offset
-  ///   - range: The last index of the range
-  public func range(_ offset: Int, _ range: Int) -> PostgrestFilterBuilder {
-    return self.offset(offset).limit(range - offset)
-  }
-
-  /// Returns only a single result
-  /// https://supabase.io/docs/reference/javascript/single
-  public func single() -> PostgrestFilterBuilder {
-    return self.limit(1)
-  }
-
-  /// Orders the results by a column
-  /// https://postgrest.org/en/v8.0/api.html#ordering
-  /// - Parameters:
-  ///   - column: Column to order by
-  ///   - desc: Toggle descending order
-  public func order(_ column: String, desc: Bool = false) -> PostgrestFilterBuilder {
-    appendSearchParams(name: "order", value: desc ? "\(column).desc" : "\(column).asc")
-    return self
-  }
 }

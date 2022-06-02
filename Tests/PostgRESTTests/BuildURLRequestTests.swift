@@ -34,7 +34,7 @@
             .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc") { client in
-          try client.rpc(fn: "test_fcn", parameters: ["KEY": "VALUE"])
+          try client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
             .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc without parameter") { client in

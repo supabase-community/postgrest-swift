@@ -1,6 +1,6 @@
 let version = "0.0.3"
 let defaultHeaders = [
-  "X-Client-Info": "postgrest-swiift/\(version)"
+  "X-Client-Info": "postgrest-swift/\(version)"
 ]
 
 /// This is the main class in this package. Use it to execute queries on a PostgREST instance on Supabase.
@@ -54,31 +54,34 @@ public class PostgrestClient {
   /// - Parameter table: The ID of the table to query
   /// - Returns: `PostgrestQueryBuilder`
   public func from(_ table: String) -> PostgrestQueryBuilder {
-    return PostgrestQueryBuilder(
+    PostgrestQueryBuilder(
       url: "\(config.url)/\(table)", headers: config.headers,
       schema: config.schema, method: nil, body: nil, fetch: config.fetch)
   }
 
-  /// Call a stored procedure, aka a "Remote Procedure Call"
+  /// Perform a function call.
   /// - Parameters:
-  ///   - fn: Procedure name to call.
-  ///   - parameters: Parameters to pass to the procedure.
-  /// - Returns: `PostgrestTransformBuilder`
-  public func rpc<U: Encodable>(fn: String, parameters: U?) -> PostgrestTransformBuilder {
-    return PostgrestRpcBuilder(
+  ///   - fn: The function name to call.
+  ///   - params: The parameters to pass to the function call.
+  public func rpc<U: Encodable>(
+    fn: String,
+    params: U?,
+    count: CountOption? = nil
+  ) -> PostgrestTransformBuilder {
+    PostgrestRpcBuilder(
       url: "\(config.url)/rpc/\(fn)", headers: config.headers,
       schema: config.schema, method: nil, body: nil, fetch: config.fetch
-    ).rpc(parameters: parameters)
+    ).rpc(params: params, count: count)
   }
 
-  /// Call a stored procedure, aka a "Remote Procedure Call"
+  /// Perform a function call.
   /// - Parameters:
-  ///   - fn: Procedure name to call.
-  /// - Returns: `PostgrestTransformBuilder`
-  public func rpc(fn: String) -> PostgrestTransformBuilder {
-    return PostgrestRpcBuilder(
-      url: "\(config.url)/rpc/\(fn)", headers: config.headers,
-      schema: config.schema, method: nil, body: nil, fetch: config.fetch
-    ).rpc()
+  ///   - fn: The function name to call.
+  ///   - params: The parameters to pass to the function call.
+  public func rpc(
+    fn: String,
+    count: CountOption? = nil
+  ) -> PostgrestTransformBuilder {
+    rpc(fn: fn, params: EmptyParams(), count: count)
   }
 }

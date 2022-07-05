@@ -184,7 +184,7 @@ extension JSONEncoder {
 }
 
 extension URLSession {
-  func fetch(_ request: URLRequest, completion: @escaping Completion) {
+  func fetch(_ request: URLRequest, completion: @escaping (Result<(Data, HTTPURLResponse), Error>) -> Void) {
     let dataTask = dataTask(with: request) { data, response, error in
       if let error = error {
         completion(.failure(error))

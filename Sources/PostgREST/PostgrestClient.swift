@@ -12,13 +12,13 @@ public class PostgrestClient {
   public struct PostgrestClientConfig {
     public var url: String
     public var headers: [String: String]
-    public var fetch: Fetch?
+    public var adapters: [RequestAdapter]
     public var schema: String?
 
-    public init(url: String, headers: [String: String] = [:], fetch: Fetch?, schema: String?) {
+    public init(url: String, headers: [String: String] = [:], adapters: [RequestAdapter] = [], schema: String?) {
       self.url = url
       self.headers = headers.merging(defaultHeaders) { old, _ in old }
-      self.fetch = fetch
+      self.adapters = adapters
       self.schema = schema
     }
   }
@@ -28,11 +28,11 @@ public class PostgrestClient {
   ///   - url: Url of your supabase db instance
   ///   - headers: Headers to include when querying the database. Eg, an authentication header
   ///   - schema: Schema ID to use
-  public init(url: String, headers: [String: String] = [:], fetch: Fetch?, schema: String?) {
+  public init(url: String, headers: [String: String] = [:], adapters: [RequestAdapter] = [], schema: String?) {
     self.config = PostgrestClientConfig(
       url: url,
       headers: headers,
-      fetch: fetch,
+      adapters: adapters,
       schema: schema
     )
   }
@@ -56,7 +56,7 @@ public class PostgrestClient {
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       url: "\(config.url)/\(table)", headers: config.headers,
-      schema: config.schema, method: nil, body: nil, fetch: config.fetch)
+      schema: config.schema, method: nil, body: nil, adapters: config.adapters)
   }
 
   /// Perform a function call.
@@ -70,7 +70,8 @@ public class PostgrestClient {
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
       url: "\(config.url)/rpc/\(fn)", headers: config.headers,
-      schema: config.schema, method: nil, body: nil, fetch: config.fetch
+      schema: config.schema, method: nil, body: nil,
+      adapters: config.adapters
     ).rpc(params: params, count: count)
   }
 

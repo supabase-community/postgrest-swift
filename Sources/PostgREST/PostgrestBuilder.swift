@@ -12,7 +12,7 @@ public class PostgrestBuilder {
   var schema: String?
   var method: String?
   var body: AnyEncodable?
-  var fetch: Fetch
+  var adapters: [RequestAdapter]
 
   init(
     url: String,
@@ -21,7 +21,7 @@ public class PostgrestBuilder {
     schema: String?,
     method: String?,
     body: AnyEncodable?,
-    fetch: Fetch?
+    adapters: [RequestAdapter]
   ) {
     self.url = url
     self.queryParams = queryParams
@@ -29,7 +29,7 @@ public class PostgrestBuilder {
     self.schema = schema
     self.method = method
     self.body = body
-    self.fetch = fetch ?? URLSession.shared.fetch
+    self.adapters = adapters
   }
 
   convenience init(_ other: PostgrestBuilder) {
@@ -40,7 +40,7 @@ public class PostgrestBuilder {
       schema: other.schema,
       method: other.method,
       body: other.body,
-      fetch: other.fetch
+      adapters: other.adapters
     )
   }
 
@@ -54,25 +54,40 @@ public class PostgrestBuilder {
     count: CountOption? = nil,
     completion: @escaping (Result<PostgrestResponse, Error>) -> Void
   ) {
-    let request: URLRequest
-    do {
-      request = try buildURLRequest(head: head, count: count)
-    } catch {
-      completion(.failure(error))
-      return
+    var request = Result { try buildURLRequest(head: head, count: count) }
+
+    let group = DispatchGroup()
+    for adapter in adapters {
+      if case .success(let r) = request {
+        group.enter()
+        adapter.adapt(r) { adaptedResult in
+          request = adaptedResult
+          group.leave()
+        }
+      } else {
+        break
+      }
     }
 
-    fetch(request) { result in
-      switch result {
+    group.notify(queue: .main) {
+      switch request {
       case .failure(let error):
-        completion(.failure(error))
-      case let .success((data, response)):
-        do {
-          try Self.validate(data: data, response: response)
-          let response = PostgrestResponse(data: data, response: response)
-          completion(.success(response))
-        } catch {
-          completion(.failure(error))
+        return completion(.failure(error))
+
+      case .success(let request):
+        URLSession.shared.fetch(request) { result in
+          switch result {
+          case .failure(let error):
+            completion(.failure(error))
+          case let .success((data, response)):
+            do {
+              try Self.validate(data: data, response: response)
+              let response = PostgrestResponse(data: data, response: response)
+              completion(.success(response))
+            } catch {
+              completion(.failure(error))
+            }
+          }
         }
       }
     }

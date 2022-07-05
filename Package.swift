@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,10 +6,11 @@ import PackageDescription
 let package = Package(
   name: "PostgREST",
   platforms: [
-    .iOS(.v11),
-    .macOS(.v10_10),
-    .tvOS(.v10),
-    .watchOS(.v3),
+    .iOS(.v13),
+    .macCatalyst(.v13),
+    .macOS(.v10_15),
+    .watchOS(.v6),
+    .tvOS(.v13)
   ],
   products: [
     .library(
@@ -23,11 +24,15 @@ let package = Package(
       url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.8.1"
     ),
     .package(name: "AnyCodable", url: "https://github.com/Flight-School/AnyCodable", from: "0.6.2"),
+    .package(url: "https://github.com/kean/Get", from: "0.8.0"),
   ],
   targets: [
     .target(
       name: "PostgREST",
-      dependencies: ["AnyCodable"]
+      dependencies: [
+        "AnyCodable",
+        .product(name: "Get", package: "Get")
+      ]
     ),
     .testTarget(
       name: "PostgRESTTests",

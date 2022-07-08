@@ -10,7 +10,7 @@ let package = Package(
     .macCatalyst(.v13),
     .macOS(.v10_15),
     .watchOS(.v6),
-    .tvOS(.v13)
+    .tvOS(.v13),
   ],
   products: [
     .library(
@@ -31,7 +31,7 @@ let package = Package(
       name: "PostgREST",
       dependencies: [
         "AnyCodable",
-        .product(name: "Get", package: "Get")
+        .product(name: "Get", package: "Get"),
       ]
     ),
     .testTarget(

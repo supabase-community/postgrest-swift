@@ -1,10 +1,5 @@
 import Foundation
 
-let version = "0.0.4"
-let defaultHeaders = [
-  "X-Client-Info": "postgrest-swift/\(version)"
-]
-
 /// This is the main class in this package. Use it to execute queries on a PostgREST instance on Supabase.
 public class PostgrestClient {
   /// Configuration for the client
@@ -24,7 +19,7 @@ public class PostgrestClient {
       delegate: PostgrestClientDelegate? = nil
     ) {
       self.url = url
-      self.headers = headers.merging(defaultHeaders) { old, _ in old }
+      self.headers = headers.merging(Constants.defaultHeaders) { old, _ in old }
       self.schema = schema
       self.delegate = delegate ?? DefaultPostgrestClientDelegate()
     }

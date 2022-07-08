@@ -8,8 +8,8 @@ let package = Package(
   platforms: [
     .iOS(.v11),
     .macOS(.v10_10),
-    .tvOS(.v10),
     .watchOS(.v3),
+    .tvOS(.v10),
   ],
   products: [
     .library(
@@ -27,7 +27,9 @@ let package = Package(
   targets: [
     .target(
       name: "PostgREST",
-      dependencies: ["AnyCodable"]
+      dependencies: [
+        "AnyCodable"
+      ]
     ),
     .testTarget(
       name: "PostgRESTTests",

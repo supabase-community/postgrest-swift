@@ -6,41 +6,46 @@ import Foundation
 #endif
 
 public class PostgrestBuilder {
+  unowned var client: PostgrestClient
+
   var url: String
   var queryParams: [(name: String, value: String)]
   var headers: [String: String]
   var schema: String?
   var method: String?
   var body: AnyEncodable?
-  var fetch: Fetch
+  var delegate: PostgrestClientDelegate
 
   init(
+    client: PostgrestClient,
     url: String,
     queryParams: [(name: String, value: String)] = [],
     headers: [String: String],
     schema: String?,
     method: String?,
     body: AnyEncodable?,
-    fetch: Fetch?
+    delegate: PostgrestClientDelegate
   ) {
+    self.client = client
     self.url = url
     self.queryParams = queryParams
     self.headers = headers
     self.schema = schema
     self.method = method
     self.body = body
-    self.fetch = fetch ?? URLSession.shared.fetch
+    self.delegate = delegate
   }
 
   convenience init(_ other: PostgrestBuilder) {
     self.init(
+      client: other.client,
       url: other.url,
       queryParams: other.queryParams,
       headers: other.headers,
       schema: other.schema,
       method: other.method,
       body: other.body,
-      fetch: other.fetch
+      delegate: other.delegate
     )
   }
 
@@ -54,27 +59,26 @@ public class PostgrestBuilder {
     count: CountOption? = nil,
     completion: @escaping (Result<PostgrestResponse, Error>) -> Void
   ) {
-    let request: URLRequest
     do {
-      request = try buildURLRequest(head: head, count: count)
-    } catch {
-      completion(.failure(error))
-      return
-    }
-
-    fetch(request) { result in
-      switch result {
-      case .failure(let error):
-        completion(.failure(error))
-      case let .success((data, response)):
-        do {
-          try Self.validate(data: data, response: response)
-          let response = PostgrestResponse(data: data, response: response)
-          completion(.success(response))
-        } catch {
-          completion(.failure(error))
+      let request = try buildURLRequest(head: head, count: count)
+      delegate.client(client, willSendRequest: request) { request in
+        URLSession.shared.fetch(request) { result in
+          switch result {
+          case .failure(let error):
+            completion(.failure(error))
+          case let .success((data, response)):
+            do {
+              try Self.validate(data: data, response: response)
+              let response = PostgrestResponse(data: data, response: response)
+              completion(.success(response))
+            } catch {
+              completion(.failure(error))
+            }
+          }
         }
       }
+    } catch {
+      completion(.failure(error))
     }
   }
 
@@ -169,7 +173,10 @@ extension JSONEncoder {
 }
 
 extension URLSession {
-  func fetch(_ request: URLRequest, completion: @escaping Completion) {
+  func fetch(
+    _ request: URLRequest,
+    completion: @escaping (Result<(Data, HTTPURLResponse), Error>) -> Void
+  ) {
     let dataTask = dataTask(with: request) { data, response, error in
       if let error = error {
         completion(.failure(error))

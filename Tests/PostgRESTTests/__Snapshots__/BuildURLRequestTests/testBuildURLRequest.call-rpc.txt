@@ -1,6 +1,6 @@
 curl \
 	--request POST \
 	--header "Content-Type: application/json" \
-	--header "X-Client-Info: postgrest-swift/0.0.4" \
+	--header "X-Client-Info: postgrest-swift/0.0.5" \
 	--data "{\"KEY\":\"VALUE\"}" \
 	"https://example.supabase.co/rpc/test_fcn"

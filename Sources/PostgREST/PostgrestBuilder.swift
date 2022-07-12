@@ -6,8 +6,7 @@ import Foundation
 #endif
 
 public class PostgrestBuilder {
-  unowned var client: PostgrestClient
-
+  var client: PostgrestClient
   var url: String
   var queryParams: [(name: String, value: String)]
   var headers: [String: String]
@@ -61,6 +60,7 @@ public class PostgrestBuilder {
   ) {
     do {
       let request = try buildURLRequest(head: head, count: count)
+
       delegate.client(client, willSendRequest: request) { request in
         URLSession.shared.fetch(request) { result in
           switch result {

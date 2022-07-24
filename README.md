@@ -27,7 +27,7 @@ import PostgREST
 let supabaseUrl = ""
 let supabaseKey = ""
 
-var database = PostgrestClient(
+var client = PostgrestClient(
     url: "\(supabaseUrl)/rest/v1",
     headers: ["apikey": supabaseKey],
     schema: "public")
@@ -76,6 +76,12 @@ let insertedTodos = try await client.from("todo")
     .execute()
     .decoded(to: [Todo].self)
 
+// You can call Postgres functions as a "Remote Procedure Call" (rpc).
+// Update a todo to isComplete true status.
+let completedTodo = try await client
+    .rpc(fn: "complete_todo", params: ["id": "1"])
+    .execute()
+    .decoded(to: [Todo].self)
 ```
 
 ## Contributing

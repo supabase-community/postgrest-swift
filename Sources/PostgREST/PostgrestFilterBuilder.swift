@@ -66,7 +66,7 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
   }
 
   public func `in`(column: String, value: [URLQueryRepresentable]) -> PostgrestFilterBuilder {
-    appendSearchParams(name: column, value: "in.\(value.map(\.queryValue).joined(separator: ","))")
+    appendSearchParams(name: column, value: "in.(\(value.map(\.queryValue).joined(separator: ",")))")
     return self
   }
 

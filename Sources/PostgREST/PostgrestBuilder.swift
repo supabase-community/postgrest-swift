@@ -50,9 +50,11 @@ public class PostgrestBuilder {
 
   /// Executes the built query or command.
   /// - Parameters:
-  ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `false`
+  ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to
+  /// `false`
   ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
-  ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`. Called after API call is completed and validated.
+  ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`.
+  /// Called after API call is completed and validated.
   @discardableResult
   public func execute(
     head: Bool = false,
@@ -71,7 +73,7 @@ public class PostgrestBuilder {
   ///   - response: `HTTPURLResponse` received from the server.
   /// - Throws: Throws `PostgrestError` if invalid JSON object.
   private static func validate(data: Data, response: HTTPURLResponse) throws {
-    if 200..<300 ~= response.statusCode {
+    if 200 ..< 300 ~= response.statusCode {
       return
     }
 

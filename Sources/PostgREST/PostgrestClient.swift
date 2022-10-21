@@ -1,6 +1,7 @@
 import Foundation
 
-/// This is the main class in this package. Use it to execute queries on a PostgREST instance on Supabase.
+/// This is the main class in this package. Use it to execute queries on a PostgREST instance on
+/// Supabase.
 public class PostgrestClient {
   /// Configuration for the client
   public var config: PostgrestClientConfig
@@ -36,7 +37,7 @@ public class PostgrestClient {
     schema: String?,
     http: PostgrestHTTPClient? = nil
   ) {
-    self.config = PostgrestClientConfig(
+    config = PostgrestClientConfig(
       url: url,
       headers: headers,
       schema: schema,

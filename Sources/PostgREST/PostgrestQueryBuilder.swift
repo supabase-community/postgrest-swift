@@ -70,8 +70,10 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs an UPSERT into the table.
   /// - Parameters:
   ///   - values: The values to insert.
-  ///   - onConflict: By specifying the `on_conflict` query parameter, you can make UPSERT work on a column(s) that has a unique constraint.
-  ///   - returning: By default the new record is returned. Set this to `minimal` if you don't need this value.
+  ///   - onConflict: By specifying the `on_conflict` query parameter, you can make UPSERT work on a
+  /// column(s) that has a unique constraint.
+  ///   - returning: By default the new record is returned. Set this to `minimal` if you don't need
+  /// this value.
   ///   - count: Count algorithm to use to count rows in a table.
   ///   - ignoreDuplicates: Specifies if duplicate rows should be ignored and not inserted.
   public func upsert<U: Encodable>(
@@ -106,7 +108,8 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs an UPDATE on the table.
   /// - Parameters:
   ///   - values: The values to update.
-  ///   - returning: By default the updated record is returned. Set this to `minimal` if you don't need this value.
+  ///   - returning: By default the updated record is returned. Set this to `minimal` if you don't
+  /// need this value.
   ///   - count: Count algorithm to use to count rows in a table.
   public func update<U: Encodable>(
     values: U,
@@ -130,7 +133,8 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
 
   /// Performs a DELETE on the table.
   /// - Parameters:
-  ///   - returning: By default the deleted rows are returned. Set this to `minimal` if you don't need this value.
+  ///   - returning: By default the deleted rows are returned. Set this to `minimal` if you don't
+  /// need this value.
   ///   - count: Count algorithm to use to count rows in a table.
   public func delete(
     returning: PostgrestReturningOptions = .representation,

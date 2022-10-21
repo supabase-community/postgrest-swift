@@ -53,7 +53,7 @@
         TestCase(name: "test in filter") { client in
           try client.from("todos").select().in(column: "id", value: [1, 2, 3])
             .buildURLRequest(head: false, count: nil)
-        }
+        },
       ]
 
       for testCase in testCases {

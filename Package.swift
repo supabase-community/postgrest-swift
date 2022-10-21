@@ -16,7 +16,7 @@ let package = Package(
     .library(
       name: "PostgREST",
       targets: ["PostgREST"]
-    )
+    ),
   ],
   dependencies: [
     .package(
@@ -29,7 +29,7 @@ let package = Package(
     .target(
       name: "PostgREST",
       dependencies: [
-        "AnyCodable"
+        "AnyCodable",
       ]
     ),
     .testTarget(
@@ -43,7 +43,7 @@ let package = Package(
         ),
       ],
       exclude: [
-        "__Snapshots__"
+        "__Snapshots__",
       ]
     ),
     .testTarget(name: "PostgRESTIntegrationTests", dependencies: ["PostgREST"]),

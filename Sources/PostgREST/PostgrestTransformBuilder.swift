@@ -1,5 +1,4 @@
 public class PostgrestTransformBuilder: PostgrestBuilder {
-
   /// Performs a vertical filtering with SELECT.
   /// - Parameters:
   ///   - columns: The columns to retrieve, separated by commas.
@@ -89,7 +88,8 @@ public class PostgrestTransformBuilder: PostgrestBuilder {
     return self
   }
 
-  /// Retrieves only one row from the result. Result must be one row (e.g. using `limit`), otherwise this will result in an error.
+  /// Retrieves only one row from the result. Result must be one row (e.g. using `limit`), otherwise
+  /// this will result in an error.
   public func single() -> PostgrestTransformBuilder {
     headers["Accept"] = "application/vnd.pgrst.object+json"
     return self

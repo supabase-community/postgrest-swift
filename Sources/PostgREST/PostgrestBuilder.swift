@@ -13,7 +13,7 @@ public class PostgrestBuilder {
   var schema: String?
   var method: String?
   var body: AnyEncodable?
-  var delegate: PostgrestClientDelegate
+  var http: PostgrestHTTPClient
 
   init(
     client: PostgrestClient,
@@ -23,7 +23,7 @@ public class PostgrestBuilder {
     schema: String?,
     method: String?,
     body: AnyEncodable?,
-    delegate: PostgrestClientDelegate
+    http: PostgrestHTTPClient
   ) {
     self.client = client
     self.url = url
@@ -32,7 +32,7 @@ public class PostgrestBuilder {
     self.schema = schema
     self.method = method
     self.body = body
-    self.delegate = delegate
+    self.http = http
   }
 
   convenience init(_ other: PostgrestBuilder) {
@@ -44,7 +44,7 @@ public class PostgrestBuilder {
       schema: other.schema,
       method: other.method,
       body: other.body,
-      delegate: other.delegate
+      http: other.http
     )
   }
 
@@ -53,33 +53,16 @@ public class PostgrestBuilder {
   ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to `false`
   ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
   ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`. Called after API call is completed and validated.
+  @discardableResult
   public func execute(
     head: Bool = false,
-    count: CountOption? = nil,
-    completion: @escaping (Result<PostgrestResponse, Error>) -> Void
-  ) {
-    do {
-      let request = try buildURLRequest(head: head, count: count)
+    count: CountOption? = nil
+  ) async throws -> PostgrestResponse {
+    let request = try buildURLRequest(head: head, count: count)
 
-      delegate.client(client, willSendRequest: request) { request in
-        URLSession.shared.fetch(request) { result in
-          switch result {
-          case .failure(let error):
-            completion(.failure(error))
-          case let .success((data, response)):
-            do {
-              try Self.validate(data: data, response: response)
-              let response = PostgrestResponse(data: data, response: response)
-              completion(.success(response))
-            } catch {
-              completion(.failure(error))
-            }
-          }
-        }
-      }
-    } catch {
-      completion(.failure(error))
-    }
+    let (data, response) = try await http.execute(request)
+    try Self.validate(data: data, response: response)
+    return PostgrestResponse(data: data, response: response)
   }
 
   /// Validates the response from PostgREST
@@ -170,32 +153,4 @@ extension JSONEncoder {
     }
     return encoder
   }()
-}
-
-extension URLSession {
-  func fetch(
-    _ request: URLRequest,
-    completion: @escaping (Result<(Data, HTTPURLResponse), Error>) -> Void
-  ) {
-    let dataTask = dataTask(with: request) { data, response, error in
-      if let error = error {
-        completion(.failure(error))
-        return
-      }
-
-      guard let httpResponse = response as? HTTPURLResponse else {
-        completion(.failure(URLError(.badServerResponse)))
-        return
-      }
-
-      guard let data = data else {
-        completion(.failure(URLError(.badServerResponse)))
-        return
-      }
-
-      completion(.success((data, httpResponse)))
-    }
-
-    dataTask.resume()
-  }
 }

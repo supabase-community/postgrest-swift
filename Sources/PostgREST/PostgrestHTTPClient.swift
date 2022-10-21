@@ -4,8 +4,10 @@ public protocol PostgrestHTTPClient {
   func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse)
 }
 
-struct DefaultPostgrestHTTPClient: PostgrestHTTPClient {
-  func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+public struct DefaultPostgrestHTTPClient: PostgrestHTTPClient {
+  public init() {}
+  
+  public func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
     try await withCheckedThrowingContinuation { continuation in
       let dataTask = URLSession.shared.dataTask(with: request) { data, response, error in
         if let error = error {

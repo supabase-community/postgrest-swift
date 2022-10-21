@@ -1,6 +1,7 @@
 import Foundation
 
-/// This is the main class in this package. Use it to execute queries on a PostgREST instance on Supabase.
+/// This is the main class in this package. Use it to execute queries on a PostgREST instance on
+/// Supabase.
 public class PostgrestClient {
   /// Configuration for the client
   public var config: PostgrestClientConfig
@@ -10,18 +11,18 @@ public class PostgrestClient {
     public var url: String
     public var headers: [String: String]
     public var schema: String?
-    public var delegate: PostgrestClientDelegate
+    public var http: PostgrestHTTPClient
 
     public init(
       url: String,
       headers: [String: String] = [:],
       schema: String?,
-      delegate: PostgrestClientDelegate? = nil
+      http: PostgrestHTTPClient? = nil
     ) {
       self.url = url
       self.headers = headers.merging(Constants.defaultHeaders) { old, _ in old }
       self.schema = schema
-      self.delegate = delegate ?? DefaultPostgrestClientDelegate()
+      self.http = http ?? DefaultPostgrestHTTPClient()
     }
   }
 
@@ -34,13 +35,13 @@ public class PostgrestClient {
     url: String,
     headers: [String: String] = [:],
     schema: String?,
-    delegate: PostgrestClientDelegate? = nil
+    http: PostgrestHTTPClient? = nil
   ) {
-    self.config = PostgrestClientConfig(
+    config = PostgrestClientConfig(
       url: url,
       headers: headers,
       schema: schema,
-      delegate: delegate
+      http: http
     )
   }
 
@@ -68,7 +69,7 @@ public class PostgrestClient {
       schema: config.schema,
       method: nil,
       body: nil,
-      delegate: config.delegate
+      http: config.http
     )
   }
 
@@ -88,7 +89,7 @@ public class PostgrestClient {
       schema: config.schema,
       method: nil,
       body: nil,
-      delegate: config.delegate
+      http: config.http
     ).rpc(params: params, count: count)
   }
 
@@ -103,23 +104,3 @@ public class PostgrestClient {
     rpc(fn: fn, params: EmptyParams(), count: count)
   }
 }
-
-public protocol PostgrestClientDelegate {
-  func client(
-    _ client: PostgrestClient,
-    willSendRequest request: URLRequest,
-    completion: @escaping (URLRequest) -> Void
-  )
-}
-
-extension PostgrestClientDelegate {
-  public func client(
-    _ client: PostgrestClient,
-    willSendRequest request: URLRequest,
-    completion: @escaping (URLRequest) -> Void
-  ) {
-    completion(request)
-  }
-}
-
-struct DefaultPostgrestClientDelegate: PostgrestClientDelegate {}

@@ -19,7 +19,7 @@ public struct PostgrestResponse: Hashable {
     var count: Int?
 
     if let contentRange = response.allHeaderFields["content-range"] as? String,
-      let lastElement = contentRange.split(separator: "/").last
+       let lastElement = contentRange.split(separator: "/").last
     {
       count = lastElement == "*" ? nil : Int(lastElement)
     }
@@ -29,7 +29,6 @@ public struct PostgrestResponse: Hashable {
 }
 
 extension PostgrestResponse {
-
   public func json() throws -> Any {
     try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
   }

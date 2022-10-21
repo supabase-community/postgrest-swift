@@ -3,7 +3,7 @@ import Foundation
 public class PostgrestFilterBuilder: PostgrestTransformBuilder {
   public enum Operator: String, CaseIterable {
     case eq, neq, gt, gte, lt, lte, like, ilike, `is`, `in`, cs, cd, sl, sr, nxl, nxr, adj, ov, fts,
-      plfts, phfts, wfts
+         plfts, phfts, wfts
   }
 
   // MARK: - Filters
@@ -66,7 +66,10 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
   }
 
   public func `in`(column: String, value: [URLQueryRepresentable]) -> PostgrestFilterBuilder {
-    appendSearchParams(name: column, value: "in.(\(value.map(\.queryValue).joined(separator: ",")))")
+    appendSearchParams(
+      name: column,
+      value: "in.(\(value.map(\.queryValue).joined(separator: ",")))"
+    )
     return self
   }
 

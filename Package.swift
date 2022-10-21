@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,16 +6,17 @@ import PackageDescription
 let package = Package(
   name: "PostgREST",
   platforms: [
-    .iOS(.v11),
-    .macOS(.v10_10),
-    .watchOS(.v3),
-    .tvOS(.v10),
+    .iOS(.v13),
+    .macCatalyst(.v13),
+    .macOS(.v10_15),
+    .watchOS(.v6),
+    .tvOS(.v13),
   ],
   products: [
     .library(
       name: "PostgREST",
       targets: ["PostgREST"]
-    )
+    ),
   ],
   dependencies: [
     .package(
@@ -28,7 +29,7 @@ let package = Package(
     .target(
       name: "PostgREST",
       dependencies: [
-        "AnyCodable"
+        "AnyCodable",
       ]
     ),
     .testTarget(
@@ -42,7 +43,7 @@ let package = Package(
         ),
       ],
       exclude: [
-        "__Snapshots__"
+        "__Snapshots__",
       ]
     ),
     .testTarget(name: "PostgRESTIntegrationTests", dependencies: ["PostgREST"]),

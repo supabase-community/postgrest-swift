@@ -64,11 +64,8 @@ public class PostgrestClient {
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       client: self,
-      url: "\(config.url)/\(table)",
-      headers: config.headers,
+      request: .init(path: "\(config.url)/\(table)", headers: config.headers),
       schema: config.schema,
-      method: nil,
-      body: nil,
       http: config.http
     )
   }
@@ -84,11 +81,8 @@ public class PostgrestClient {
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
       client: self,
-      url: "\(config.url)/rpc/\(fn)",
-      headers: config.headers,
+      request: .init(path: "\(config.url)/rpc/\(fn)", method: .post, headers: config.headers),
       schema: config.schema,
-      method: nil,
-      body: nil,
       http: config.http
     ).rpc(params: params, count: count)
   }

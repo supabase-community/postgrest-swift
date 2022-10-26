@@ -24,12 +24,14 @@ let package = Package(
       url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.8.1"
     ),
     .package(name: "AnyCodable", url: "https://github.com/Flight-School/AnyCodable", from: "0.6.2"),
+    .package(url: "https://github.com/kean/Get", from: "2.1.4"),
   ],
   targets: [
     .target(
       name: "PostgREST",
       dependencies: [
         "AnyCodable",
+        "Get",
       ]
     ),
     .testTarget(

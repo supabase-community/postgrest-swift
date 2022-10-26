@@ -16,6 +16,6 @@ public struct PostgrestError: Error, Codable {
 
 extension PostgrestError: LocalizedError {
   public var errorDescription: String? {
-    return message
+    message
   }
 }

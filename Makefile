@@ -22,11 +22,7 @@ test-tvos:
 		-destination platform="$(PLATFORM_TVOS)"
 
 format:
-	swift format \
-		--ignore-unparsable-files \
-		--in-place \
-		--recursive \
-		./Package.swift ./Sources ./Tests
+	swiftformat .
 
 supabase-up: supabase-down
 	supabase start && supabase db reset

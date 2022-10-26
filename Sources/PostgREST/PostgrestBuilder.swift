@@ -1,5 +1,6 @@
 import AnyCodable
 import Foundation
+import Get
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
@@ -7,43 +8,74 @@ import Foundation
 
 public class PostgrestBuilder {
   var client: PostgrestClient
-  var url: String
-  var queryParams: [(name: String, value: String)]
-  var headers: [String: String]
+  var request: Request<Data>
+
+  var url: String {
+    get {
+      request.url?.absoluteString ?? ""
+    }
+    set {
+      request.url = URL(string: newValue)
+    }
+  }
+
+  var queryParams: [(name: String, value: String?)] {
+    get {
+      request.query ?? []
+    }
+    set {
+      request.query = newValue
+    }
+  }
+
+  var headers: [String: String] {
+    get {
+      request.headers ?? [:]
+    }
+    set {
+      request.headers = newValue
+    }
+  }
+
   var schema: String?
-  var method: String?
-  var body: AnyEncodable?
+
+  var method: String {
+    get {
+      request.method.rawValue
+    }
+    set {
+      request.method = HTTPMethod(rawValue: newValue)
+    }
+  }
+
+  var body: Encodable? {
+    get {
+      request.body
+    }
+    set {
+      request.body = newValue
+    }
+  }
+
   var http: PostgrestHTTPClient
 
   init(
     client: PostgrestClient,
-    url: String,
-    queryParams: [(name: String, value: String)] = [],
-    headers: [String: String],
+    request: Request<Data>,
     schema: String?,
-    method: String?,
-    body: AnyEncodable?,
     http: PostgrestHTTPClient
   ) {
     self.client = client
-    self.url = url
-    self.queryParams = queryParams
-    self.headers = headers
+    self.request = request
     self.schema = schema
-    self.method = method
-    self.body = body
     self.http = http
   }
 
   convenience init(_ other: PostgrestBuilder) {
     self.init(
       client: other.client,
-      url: other.url,
-      queryParams: other.queryParams,
-      headers: other.headers,
+      request: other.request,
       schema: other.schema,
-      method: other.method,
-      body: other.body,
       http: other.http
     )
   }
@@ -62,7 +94,7 @@ public class PostgrestBuilder {
   ) async throws -> PostgrestResponse {
     let request = try buildURLRequest(head: head, count: count)
 
-    let (data, response) = try await http.execute(request)
+    let (data, response) = try await http.execute(request, client: client)
     try Self.validate(data: data, response: response)
     return PostgrestResponse(data: data, response: response)
   }
@@ -97,10 +129,6 @@ public class PostgrestBuilder {
       } else {
         headers["Prefer"] = "count=\(count.rawValue)"
       }
-    }
-
-    guard let method = method else {
-      throw PostgrestError(message: "Missing table operation: select, insert, update or delete")
     }
 
     headers["Content-Type"] = "application/json"

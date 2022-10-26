@@ -1,5 +1,3 @@
-import AnyCodable
-
 public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs a vertical filtering with SELECT.
   /// - Parameters:
@@ -44,7 +42,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     if let returning = returning {
       prefersHeaders.append("return=\(returning.rawValue)")
     }
-    body = AnyEncodable(values)
+    body = values
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
@@ -92,7 +90,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     if let onConflict = onConflict {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
-    body = AnyEncodable(values)
+    body = values
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
@@ -118,7 +116,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   ) -> PostgrestFilterBuilder {
     method = "PATCH"
     var preferHeaders = ["return=\(returning.rawValue)"]
-    body = AnyEncodable(values)
+    body = values
     if let count = count {
       preferHeaders.append("count=\(count.rawValue)")
     }

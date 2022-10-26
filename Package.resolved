@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "AnyCodable",
-        "repositoryURL": "https://github.com/Flight-School/AnyCodable",
-        "state": {
-          "branch": null,
-          "revision": "f9fda69a7b704d46fb5123005f2f7e43dbb8a0fa",
-          "version": "0.6.5"
-        }
-      },
-      {
         "package": "Get",
         "repositoryURL": "https://github.com/kean/Get",
         "state": {
@@ -20,12 +11,12 @@
         }
       },
       {
-        "package": "SnapshotTesting",
+        "package": "swift-snapshot-testing",
         "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
         "state": {
           "branch": null,
-          "revision": "f8a9c997c3c1dab4e216a8ec9014e23144cbab37",
-          "version": "1.9.0"
+          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
+          "version": "1.10.0"
         }
       }
     ]

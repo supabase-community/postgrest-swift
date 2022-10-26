@@ -76,7 +76,7 @@ public class PostgrestClient {
   ///   - params: The parameters to pass to the function call.
   public func rpc<U: Encodable>(
     fn: String,
-    params: U?,
+    params: U,
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
@@ -95,6 +95,6 @@ public class PostgrestClient {
     fn: String,
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
-    rpc(fn: fn, params: EmptyParams(), count: count)
+    rpc(fn: fn, params: NoParams(), count: count)
   }
 }

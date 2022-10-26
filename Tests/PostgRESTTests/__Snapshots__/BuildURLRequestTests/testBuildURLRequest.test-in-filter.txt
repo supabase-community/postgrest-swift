@@ -1,4 +1,4 @@
 curl \
 	--header "Content-Type: application/json" \
 	--header "X-Client-Info: postgrest-swift/0.0.6" \
-	"https://example.supabase.co/todos?select=*&id=in.(1,2,3)"
+	"https://example.supabase.co/todos?id=in.(1,2,3)&select=*"

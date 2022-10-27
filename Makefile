@@ -1,11 +1,10 @@
 PLATFORM_IOS = iOS Simulator,name=iPhone 14 Pro Max
 PLATFORM_MACOS = macOS
-PLATFORM_MAC_CATALYST = macOS,variant=Mac Catalyst
 PLATFORM_TVOS = tvOS Simulator,name=Apple TV
 
 .PHONY: test-library
 test-library:
-	for platform in "$(PLATFORM_IOS)" "$(PLATFORM_MACOS)" "$(PLATFORM_MAC_CATALYST)" "$(PLATFORM_TVOS)"; do \
+	for platform in "$(PLATFORM_IOS)" "$(PLATFORM_MACOS)" "$(PLATFORM_TVOS)"; do \
 		xcodebuild test \
 			-scheme PostgREST \
 			-destination platform="$$platform" \

@@ -14,18 +14,17 @@ public class PostgrestClient {
     public var url: String
     public var headers: [String: String]
     public var schema: String?
-    public var http: PostgrestHTTPClient
 
     public init(
       url: String,
       headers: [String: String] = [:],
-      schema: String?,
-      http: PostgrestHTTPClient? = nil
+      schema: String?
     ) {
       self.url = url
-      self.headers = headers.merging(Constants.defaultHeaders) { old, _ in old }
+      self.headers = headers
       self.schema = schema
-      self.http = http ?? DefaultPostgrestHTTPClient()
+
+      self.headers["X-Client-Info"] = "postgrest-swift/\(version)"
     }
   }
 
@@ -37,17 +36,16 @@ public class PostgrestClient {
   public convenience init(
     url: String,
     headers: [String: String] = [:],
-    schema: String?,
-    http: PostgrestHTTPClient? = nil
+    schema: String?
   ) {
-    self.init(config: .init(url: url, headers: headers, schema: schema, http: http))
+    self.init(config: .init(url: url, headers: headers, schema: schema))
   }
 
   /// Initializes the `PostgrestClient` with a config object
   /// - Parameter config: A `PostgrestClientConfig` struct with the correct parameters
   public init(config: PostgrestClientConfig) {
     self.config = config
-    self.api = APIClient(baseURL: nil)
+    api = APIClient(baseURL: nil)
   }
 
   /// Authenticates the request with JWT.
@@ -97,7 +95,12 @@ public class PostgrestClient {
 }
 
 struct PostgrestAPIClientDelegate: APIClientDelegate {
-  func client(_ client: APIClient, validateResponse response: HTTPURLResponse, data: Data, task: URLSessionTask) throws {
+  func client(
+    _: APIClient,
+    validateResponse response: HTTPURLResponse,
+    data: Data,
+    task _: URLSessionTask
+  ) throws {
     guard 200 ..< 300 ~= response.statusCode else {
       return
     }

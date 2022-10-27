@@ -56,68 +56,43 @@ public class PostgrestBuilder {
     }
   }
 
-  var http: PostgrestHTTPClient
-
   init(
     client: PostgrestClient,
     request: Request<Data>,
-    schema: String?,
-    http: PostgrestHTTPClient
+    schema: String?
   ) {
     self.client = client
     self.request = request
     self.schema = schema
-    self.http = http
   }
 
   convenience init(_ other: PostgrestBuilder) {
     self.init(
       client: other.client,
       request: other.request,
-      schema: other.schema,
-      http: other.http
+      schema: other.schema
     )
   }
 
-  /// Executes the built query or command.
-  /// - Parameters:
-  ///   - head: If `true` use `HEAD` for the HTTP method when building the URLRequest. Defaults to
-  /// `false`
-  ///   - count: A `CountOption` determining how many items to return. Defaults to `nil`
-  ///   - completion: Escaping completion handler with either a `PostgrestResponse` or an `Error`.
-  /// Called after API call is completed and validated.
+  @discardableResult
+  public func execute<T: Decodable>(
+    head: Bool = false,
+    count: CountOption? = nil
+  ) async throws -> Response<T> {
+    adaptRequest(head: head, count: count)
+    return try await client.api.send(request.withResponse(T.self))
+  }
+
   @discardableResult
   public func execute(
     head: Bool = false,
     count: CountOption? = nil
-  ) async throws -> PostgrestResponse {
-    let request = try buildURLRequest(head: head, count: count)
-
-    let (data, response) = try await http.execute(request, client: client)
-    try Self.validate(data: data, response: response)
-    return PostgrestResponse(data: data, response: response)
+  ) async throws -> Response<Void> {
+    adaptRequest(head: head, count: count)
+    return try await client.api.send(request.withResponse(Void.self))
   }
 
-  /// Validates the response from PostgREST
-  /// - Parameters:
-  ///   - data: `Data` received from the server.
-  ///   - response: `HTTPURLResponse` received from the server.
-  /// - Throws: Throws `PostgrestError` if invalid JSON object.
-  private static func validate(data: Data, response: HTTPURLResponse) throws {
-    if 200 ..< 300 ~= response.statusCode {
-      return
-    }
-
-    throw try JSONDecoder.postgrest.decode(PostgrestError.self, from: data)
-  }
-
-  /// Builds the URL request for PostgREST
-  /// - Parameters:
-  ///   - head: If on, use `HEAD` as the HTTP method.
-  ///   - count: A `CountOption`,
-  /// - Throws: Throws a `PostgressError`
-  /// - Returns: Returns a valid URLRequest for the current query.
-  func buildURLRequest(head: Bool, count: CountOption?) throws -> URLRequest {
+  func adaptRequest(head: Bool, count: CountOption?) {
     if head {
       method = "HEAD"
     }
@@ -139,27 +114,6 @@ public class PostgrestBuilder {
         headers["Content-Profile"] = schema
       }
     }
-
-    guard var components = URLComponents(string: url) else {
-      throw URLError(.badURL)
-    }
-
-    if !queryParams.isEmpty {
-      components.queryItems = components.queryItems ?? []
-      components.queryItems!.append(contentsOf: queryParams.map(URLQueryItem.init))
-    }
-
-    guard let url = components.url else {
-      throw URLError(.badURL)
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = method
-    request.allHTTPHeaderFields = headers
-    if let body = body {
-      request.httpBody = try JSONEncoder.postgrest.encode(body)
-    }
-    return request
   }
 
   func appendSearchParams(name: String, value: String) {

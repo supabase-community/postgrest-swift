@@ -15,31 +15,27 @@
     struct TestCase {
       let name: String
       var record = false
-      let build: (PostgrestClient) throws -> URLRequest
+      let build: (PostgrestClient) -> PostgrestBuilder
     }
 
-    func testBuildURLRequest() throws {
+    func testBuildRequest() throws {
       let client = PostgrestClient(url: url, schema: nil)
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-          try client.from("users")
+          client.from("users")
             .select()
             .like(column: "email", value: "%@supabase.co")
-            .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "insert new user") { client in
-          try client.from("users")
+          client.from("users")
             .insert(values: ["email": "johndoe@supabase.io"])
-            .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc") { client in
-          try client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
-            .buildURLRequest(head: false, count: nil)
+          client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
         },
         TestCase(name: "call rpc without parameter") { client in
-          try client.rpc(fn: "test_fcn")
-            .buildURLRequest(head: false, count: nil)
+          client.rpc(fn: "test_fcn")
         },
         TestCase(name: "test all filters and count") { client in
           var query = client.from("todos").select()
@@ -48,17 +44,18 @@
             query = query.filter(column: "column", operator: op, value: "Some value")
           }
 
-          return try query.buildURLRequest(head: false, count: .exact)
+          return query
         },
         TestCase(name: "test in filter") { client in
-          try client.from("todos").select().in(column: "id", value: [1, 2, 3])
-            .buildURLRequest(head: false, count: nil)
+          client.from("todos").select().in(column: "id", value: [1, 2, 3])
         },
       ]
 
       for testCase in testCases {
-        let request = try testCase.build(client)
-        assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record)
+        let builder = testCase.build(client)
+        builder.adaptRequest(head: false, count: nil)
+        let request = builder.request
+        assertSnapshot(matching: request, as: .dump, named: testCase.name, record: testCase.record)
       }
     }
   }

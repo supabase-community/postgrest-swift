@@ -1,10 +1,13 @@
 import Foundation
+import Get
 
 /// This is the main class in this package. Use it to execute queries on a PostgREST instance on
 /// Supabase.
 public class PostgrestClient {
   /// Configuration for the client
   public var config: PostgrestClientConfig
+
+  let api: APIClient
 
   /// Struct for PostgrestClient config options
   public struct PostgrestClientConfig {
@@ -31,24 +34,20 @@ public class PostgrestClient {
   ///   - url: Url of your supabase db instance
   ///   - headers: Headers to include when querying the database. Eg, an authentication header
   ///   - schema: Schema ID to use
-  public init(
+  public convenience init(
     url: String,
     headers: [String: String] = [:],
     schema: String?,
     http: PostgrestHTTPClient? = nil
   ) {
-    config = PostgrestClientConfig(
-      url: url,
-      headers: headers,
-      schema: schema,
-      http: http
-    )
+    self.init(config: .init(url: url, headers: headers, schema: schema, http: http))
   }
 
   /// Initializes the `PostgrestClient` with a config object
   /// - Parameter config: A `PostgrestClientConfig` struct with the correct parameters
   public init(config: PostgrestClientConfig) {
     self.config = config
+    self.api = APIClient(baseURL: nil)
   }
 
   /// Authenticates the request with JWT.
@@ -65,8 +64,7 @@ public class PostgrestClient {
     PostgrestQueryBuilder(
       client: self,
       request: .init(path: "\(config.url)/\(table)", headers: config.headers),
-      schema: config.schema,
-      http: config.http
+      schema: config.schema
     )
   }
 
@@ -82,8 +80,7 @@ public class PostgrestClient {
     PostgrestRpcBuilder(
       client: self,
       request: .init(path: "\(config.url)/rpc/\(fn)", method: .post, headers: config.headers),
-      schema: config.schema,
-      http: config.http
+      schema: config.schema
     ).rpc(params: params, count: count)
   }
 
@@ -96,5 +93,15 @@ public class PostgrestClient {
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
     rpc(fn: fn, params: NoParams(), count: count)
+  }
+}
+
+struct PostgrestAPIClientDelegate: APIClientDelegate {
+  func client(_ client: APIClient, validateResponse response: HTTPURLResponse, data: Data, task: URLSessionTask) throws {
+    guard 200 ..< 300 ~= response.statusCode else {
+      return
+    }
+
+    throw try JSONDecoder.postgrest.decode(PostgrestError.self, from: data)
   }
 }

@@ -25,7 +25,6 @@ public class PostgrestClient {
       var headers = headers
       headers["X-Client-Info"] = "postgrest-swift/\(version)"
       $0.sessionConfiguration.httpAdditionalHeaders = headers
-      $0.decoder = .postgrest
       if let customDelegate = apiClientDelegate {
         $0.delegate = MultiAPIClientDelegate([PostgrestAPIClientDelegate(), customDelegate])
       } else {
@@ -92,13 +91,4 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
 
     throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
-}
-
-extension JSONDecoder {
-  /// Default JSONDecoder instance used by PostgREST library.
-  public static var postgrest = { () -> JSONDecoder in
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .iso8601
-    return decoder
-  }()
 }

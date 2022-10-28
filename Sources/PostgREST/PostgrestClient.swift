@@ -78,7 +78,7 @@ public class PostgrestClient {
 
 struct PostgrestAPIClientDelegate: APIClientDelegate {
   func client(
-    _: APIClient,
+    _ client: APIClient,
     validateResponse response: HTTPURLResponse,
     data: Data,
     task _: URLSessionTask
@@ -87,7 +87,7 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
       return
     }
 
-    throw try JSONDecoder.postgrest.decode(PostgrestError.self, from: data)
+    throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
 }
 

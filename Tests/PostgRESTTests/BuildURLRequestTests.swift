@@ -1,6 +1,6 @@
 #if !os(watchOS)
-import Get
   import Foundation
+  import Get
   import SnapshotTesting
   import XCTest
 
@@ -10,7 +10,7 @@ import Get
     import FoundationNetworking
   #endif
 
-@MainActor
+  @MainActor
   final class BuildURLRequestTests: XCTestCase {
     let url = URL(string: "https://example.supabase.co")!
 
@@ -25,8 +25,14 @@ import Get
       class Delegate: APIClientDelegate {
         var testCase: TestCase!
 
-        func client(_ client: APIClient, willSendRequest request: inout URLRequest) async throws {
-          assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record, testName: "testBuildRequest()")
+        func client(_: APIClient, willSendRequest request: inout URLRequest) async throws {
+          assertSnapshot(
+            matching: request,
+            as: .curl,
+            named: testCase.name,
+            record: testCase.record,
+            testName: "testBuildRequest()"
+          )
 
           struct SomeError: Error {}
           throw SomeError()

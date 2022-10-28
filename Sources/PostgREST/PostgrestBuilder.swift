@@ -10,50 +10,30 @@ public class PostgrestBuilder {
   var request: Request<Data>
 
   var url: String {
-    get {
-      request.url?.absoluteString ?? ""
-    }
-    set {
-      request.url = URL(string: newValue)
-    }
+    get { request.url?.absoluteString ?? "" }
+    set { request.url = URL(string: newValue) }
   }
 
   var queryParams: [(name: String, value: String?)] {
-    get {
-      request.query ?? []
-    }
-    set {
-      request.query = newValue
-    }
+    get { request.query ?? [] }
+    set { request.query = newValue }
   }
 
   var headers: [String: String] {
-    get {
-      request.headers ?? [:]
-    }
-    set {
-      request.headers = newValue
-    }
+    get { request.headers ?? [:] }
+    set { request.headers = newValue }
   }
 
   var schema: String?
 
   var method: String {
-    get {
-      request.method.rawValue
-    }
-    set {
-      request.method = HTTPMethod(rawValue: newValue)
-    }
+    get { request.method.rawValue }
+    set { request.method = HTTPMethod(rawValue: newValue) }
   }
 
   var body: Encodable? {
-    get {
-      request.body
-    }
-    set {
-      request.body = newValue
-    }
+    get { request.body }
+    set { request.body = newValue }
   }
 
   init(
@@ -76,20 +56,23 @@ public class PostgrestBuilder {
 
   @discardableResult
   public func execute<T: Decodable>(
+    returning _: T.Type = T.self,
     head: Bool = false,
     count: CountOption? = nil
-  ) async throws -> Response<T> {
+  ) async throws -> PostgrestResponse<T> {
     adaptRequest(head: head, count: count)
-    return try await client.api.send(request.withResponse(T.self))
+    let response = try await client.api.send(request.withResponse(T.self))
+    return PostgrestResponse(underlyingResponse: response)
   }
 
   @discardableResult
   public func execute(
     head: Bool = false,
     count: CountOption? = nil
-  ) async throws -> Response<Void> {
+  ) async throws -> PostgrestResponse<Void> {
     adaptRequest(head: head, count: count)
-    return try await client.api.send(request.withResponse(Void.self))
+    let response = try await client.api.send(request.withResponse(Void.self))
+    return PostgrestResponse(underlyingResponse: response)
   }
 
   func adaptRequest(head: Bool, count: CountOption?) {
@@ -119,21 +102,4 @@ public class PostgrestBuilder {
   func appendSearchParams(name: String, value: String) {
     queryParams.append((name, value))
   }
-}
-
-extension JSONEncoder {
-  /// Default JSONEncoder instance used by PostgREST library.
-  public static var postgrest = { () -> JSONEncoder in
-    let encoder = JSONEncoder()
-    if #available(macOS 10.12, *) {
-      encoder.dateEncodingStrategy = .iso8601
-    } else {
-      let formatter = DateFormatter()
-      formatter.locale = Locale(identifier: "en_US_POSIX")
-      formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
-      formatter.timeZone = TimeZone(secondsFromGMT: 0)
-      encoder.dateEncodingStrategy = .formatted(formatter)
-    }
-    return encoder
-  }()
 }

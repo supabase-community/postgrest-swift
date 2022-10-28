@@ -1,17 +1,6 @@
-▿ Request<Data>
-  ▿ body: Optional<Encodable>
-    ▿ some: 1 key/value pair
-      ▿ (2 elements)
-        - key: "email"
-        - value: "johndoe@supabase.io"
-  ▿ headers: Optional<Dictionary<String, String>>
-    ▿ some: 1 key/value pair
-      ▿ (2 elements)
-        - key: "Content-Type"
-        - value: "application/json"
-  - id: Optional<String>.none
-  ▿ method: HTTPMethod
-    - rawValue: "POST"
-  - query: Optional<Array<(String, Optional<String>)>>.none
-  ▿ url: Optional<URL>
-    - some: https://example.supabase.co/users
+curl \
+	--request POST \
+	--header "Accept: application/json" \
+	--header "Content-Type: application/json" \
+	--data "{\"email\":\"johndoe@supabase.io\"}" \
+	"https://example.supabase.co/users"

@@ -1,22 +1,4 @@
-▿ Request<Data>
-  - body: Optional<Encodable>.none
-  ▿ headers: Optional<Dictionary<String, String>>
-    ▿ some: 1 key/value pair
-      ▿ (2 elements)
-        - key: "Content-Type"
-        - value: "application/json"
-  - id: Optional<String>.none
-  ▿ method: HTTPMethod
-    - rawValue: "GET"
-  ▿ query: Optional<Array<(String, Optional<String>)>>
-    ▿ some: 2 elements
-      ▿ (2 elements)
-        - .0: "select"
-        ▿ .1: Optional<String>
-          - some: "*"
-      ▿ (2 elements)
-        - .0: "email"
-        ▿ .1: Optional<String>
-          - some: "like.%@supabase.co"
-  ▿ url: Optional<URL>
-    - some: https://example.supabase.co/users
+curl \
+	--header "Accept: application/json" \
+	--header "Content-Type: application/json" \
+	"https://example.supabase.co/users?email=like.%25@supabase.co&select=*"

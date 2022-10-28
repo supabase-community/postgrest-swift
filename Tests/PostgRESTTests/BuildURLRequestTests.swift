@@ -1,4 +1,5 @@
 #if !os(watchOS)
+import Get
   import Foundation
   import SnapshotTesting
   import XCTest
@@ -9,6 +10,7 @@
     import FoundationNetworking
   #endif
 
+@MainActor
   final class BuildURLRequestTests: XCTestCase {
     let url = URL(string: "https://example.supabase.co")!
 
@@ -18,8 +20,20 @@
       let build: (PostgrestClient) -> PostgrestBuilder
     }
 
-    func testBuildRequest() throws {
-      let client = PostgrestClient(url: url, schema: nil)
+    func testBuildRequest() async throws {
+      @MainActor
+      class Delegate: APIClientDelegate {
+        var testCase: TestCase!
+
+        func client(_ client: APIClient, willSendRequest request: inout URLRequest) async throws {
+          assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record, testName: "testBuildRequest()")
+
+          struct SomeError: Error {}
+          throw SomeError()
+        }
+      }
+      let delegate = Delegate()
+      let client = PostgrestClient(url: url, schema: nil, apiClientDelegate: delegate)
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
@@ -52,10 +66,10 @@
       ]
 
       for testCase in testCases {
+        delegate.testCase = testCase
         let builder = testCase.build(client)
         builder.adaptRequest(head: false, count: nil)
-        let request = builder.request
-        assertSnapshot(matching: request, as: .dump, named: testCase.name, record: testCase.record)
+        _ = try? await builder.execute()
       }
     }
 

@@ -26,7 +26,7 @@ struct NewTodo: Codable, Hashable {
 @available(iOS 15.0.0, macOS 12.0.0, tvOS 13.0, *)
 final class IntegrationTests: XCTestCase {
   let client = PostgrestClient(
-    url: "http://localhost:54321/rest/v1",
+    url: URL(string: "http://localhost:54321/rest/v1")!,
     headers: [
       "apikey":
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs",

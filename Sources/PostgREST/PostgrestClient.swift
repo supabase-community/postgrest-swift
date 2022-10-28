@@ -3,7 +3,7 @@ import Get
 
 /// PostgREST client.
 public class PostgrestClient {
-  let url: String
+  let url: URL
   let schema: String?
   let api: APIClient
 
@@ -14,7 +14,7 @@ public class PostgrestClient {
   ///   - schema: Postgres schema to switch to.
   ///   - apiClientDelegate: Custom APIClientDelegate for the underlying APIClient.
   public init(
-    url: String,
+    url: URL,
     headers: [String: String] = [:],
     schema: String?,
     apiClientDelegate: APIClientDelegate? = nil
@@ -39,7 +39,7 @@ public class PostgrestClient {
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       client: self,
-      request: .init(path: "\(url)/\(table)"),
+      request: Request(url: url.appendingPathComponent(table)),
       schema: schema
     )
   }
@@ -57,7 +57,10 @@ public class PostgrestClient {
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
       client: self,
-      request: .init(path: "\(url)/rpc/\(fn)", method: .post),
+      request: Request(
+        url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
+        method: .post
+      ),
       schema: schema
     ).rpc(params: params, count: count)
   }

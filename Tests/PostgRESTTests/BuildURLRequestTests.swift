@@ -10,7 +10,7 @@
   #endif
 
   final class BuildURLRequestTests: XCTestCase {
-    let url = "https://example.supabase.co"
+    let url = URL(string: "https://example.supabase.co")!
 
     struct TestCase {
       let name: String
@@ -57,6 +57,13 @@
         let request = builder.request
         assertSnapshot(matching: request, as: .dump, named: testCase.name, record: testCase.record)
       }
+    }
+
+    func testSessionConfiguration() {
+      let client = PostgrestClient(url: url, schema: nil)
+      let clientInfoHeader = client.api.configuration.sessionConfiguration
+        .httpAdditionalHeaders?["X-Client-Info"]
+      XCTAssertNotNil(clientInfoHeader)
     }
   }
 #endif

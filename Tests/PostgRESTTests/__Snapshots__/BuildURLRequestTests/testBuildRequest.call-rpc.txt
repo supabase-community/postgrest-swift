@@ -5,13 +5,10 @@
         - key: "KEY"
         - value: "VALUE"
   ▿ headers: Optional<Dictionary<String, String>>
-    ▿ some: 2 key/value pairs
+    ▿ some: 1 key/value pair
       ▿ (2 elements)
         - key: "Content-Type"
         - value: "application/json"
-      ▿ (2 elements)
-        - key: "X-Client-Info"
-        - value: "postgrest-swift/0.0.6"
   - id: Optional<String>.none
   ▿ method: HTTPMethod
     - rawValue: "POST"

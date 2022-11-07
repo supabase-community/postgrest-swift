@@ -85,7 +85,7 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
     data: Data,
     task _: URLSessionTask
   ) throws {
-    guard 200 ..< 300 ~= response.statusCode else {
+    if 200 ..< 300 ~= response.statusCode {
       return
     }
 

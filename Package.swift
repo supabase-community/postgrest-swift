@@ -19,17 +19,14 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(
-      name: "SnapshotTesting",
-      url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.8.1"
-    ),
-    .package(name: "AnyCodable", url: "https://github.com/Flight-School/AnyCodable", from: "0.6.2"),
+    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.8.1"),
+    .package(url: "https://github.com/kean/Get", from: "2.1.4"),
   ],
   targets: [
     .target(
       name: "PostgREST",
       dependencies: [
-        "AnyCodable",
+        "Get",
       ]
     ),
     .testTarget(
@@ -38,7 +35,7 @@ let package = Package(
         "PostgREST",
         .product(
           name: "SnapshotTesting",
-          package: "SnapshotTesting",
+          package: "swift-snapshot-testing",
           condition: .when(platforms: [.iOS, .macOS, .tvOS])
         ),
       ],

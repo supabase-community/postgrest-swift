@@ -1,0 +1,4 @@
+curl \
+	--header "Accept: application/json" \
+	--header "Content-Type: application/json" \
+	"https://example.supabase.co/todos?id=in.(1,2,3)&select=*"

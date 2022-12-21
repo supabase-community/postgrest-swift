@@ -35,8 +35,9 @@ public class PostgrestTransformBuilder: PostgrestBuilder {
     let existingOrderIndex = queryParams.firstIndex(where: { $0.name == key })
     let value = "\(column).\(ascending ? "asc" : "desc").\(nullsFirst ? "nullsfirst" : "nullslast")"
 
-    if let existingOrderIndex = existingOrderIndex {
-      let currentValue = queryParams[existingOrderIndex].value
+    if let existingOrderIndex = existingOrderIndex,
+       let currentValue = queryParams[existingOrderIndex].value
+    {
       queryParams[existingOrderIndex] = (key, "\(currentValue),\(value)")
     } else {
       queryParams.append((key, value))

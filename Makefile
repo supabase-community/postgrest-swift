@@ -1,37 +1,24 @@
-PLATFORM_IOS = iOS Simulator,name=iPhone 11 Pro Max
+PLATFORM_IOS = iOS Simulator,name=iPhone 14 Pro Max
 PLATFORM_MACOS = macOS
-PLATFORM_TVOS = tvOS Simulator,name=Apple TV 4K (at 1080p) (2nd generation)
+PLATFORM_TVOS = tvOS Simulator,name=Apple TV
 
-default: test-all
+.PHONY: test-library
+test-library:
+	for platform in "$(PLATFORM_IOS)" "$(PLATFORM_MACOS)" "$(PLATFORM_TVOS)"; do \
+		xcodebuild test \
+			-scheme PostgREST \
+			-destination platform="$$platform" \
+			-derivedDataPath .deriveddata || exit 1; \
+	done;
 
-test-all: test-ios test-macos test-tvos
-
-test-ios:
-	xcodebuild test \
-		-scheme PostgREST \
-		-destination platform="$(PLATFORM_IOS)"
-
-test-macos:
-	xcodebuild test \
-		-scheme PostgREST \
-		-destination platform="$(PLATFORM_MACOS)"
-
-test-tvos:
-	xcodebuild test \
-		-scheme PostgREST \
-		-destination platform="$(PLATFORM_TVOS)"
-
+.PHONY: format
 format:
-	swift format \
-		--ignore-unparsable-files \
-		--in-place \
-		--recursive \
-		./Package.swift ./Sources ./Tests
+	swiftformat .
 
+.PHONY: supabase-up
 supabase-up: supabase-down
 	supabase start && supabase db reset
 
+.PHONY: supabase-down
 supabase-down:
 	supabase stop
-
-.PHONY: format test-all test-ios test-macos test-tvos

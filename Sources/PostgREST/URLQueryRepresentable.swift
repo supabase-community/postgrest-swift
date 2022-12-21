@@ -21,3 +21,7 @@ extension Double: URLQueryRepresentable {
 extension Bool: URLQueryRepresentable {
   public var queryValue: String { "\(self)" }
 }
+
+extension UUID: URLQueryRepresentable {
+  public var queryValue: String { uuidString }
+}

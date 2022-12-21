@@ -1,75 +1,45 @@
 import Foundation
+import Get
 
-/// This is the main class in this package. Use it to execute queries on a PostgREST instance on
-/// Supabase.
+/// PostgREST client.
 public class PostgrestClient {
-  /// Configuration for the client
-  public var config: PostgrestClientConfig
+  let url: URL
+  let schema: String?
+  let api: APIClient
 
-  /// Struct for PostgrestClient config options
-  public struct PostgrestClientConfig {
-    public var url: String
-    public var headers: [String: String]
-    public var schema: String?
-    public var http: PostgrestHTTPClient
-
-    public init(
-      url: String,
-      headers: [String: String] = [:],
-      schema: String?,
-      http: PostgrestHTTPClient? = nil
-    ) {
-      self.url = url
-      self.headers = headers.merging(Constants.defaultHeaders) { old, _ in old }
-      self.schema = schema
-      self.http = http ?? DefaultPostgrestHTTPClient()
+  /// Creates a PostgREST client.
+  /// - Parameters:
+  ///   - url: URL of the PostgREST endpoint.
+  ///   - headers: Custom headers.
+  ///   - schema: Postgres schema to switch to.
+  ///   - apiClientDelegate: Custom APIClientDelegate for the underlying APIClient.
+  public init(
+    url: URL,
+    headers: [String: String] = [:],
+    schema: String?,
+    apiClientDelegate: APIClientDelegate? = nil
+  ) {
+    self.url = url
+    self.schema = schema
+    api = APIClient(baseURL: nil) {
+      var headers = headers
+      headers["X-Client-Info"] = "postgrest-swift/\(version)"
+      $0.sessionConfiguration.httpAdditionalHeaders = headers
+      if let customDelegate = apiClientDelegate {
+        $0.delegate = MultiAPIClientDelegate([PostgrestAPIClientDelegate(), customDelegate])
+      } else {
+        $0.delegate = PostgrestAPIClientDelegate()
+      }
     }
   }
 
-  /// Initializes the `PostgrestClient` with the correct parameters.
-  /// - Parameters:
-  ///   - url: Url of your supabase db instance
-  ///   - headers: Headers to include when querying the database. Eg, an authentication header
-  ///   - schema: Schema ID to use
-  public init(
-    url: String,
-    headers: [String: String] = [:],
-    schema: String?,
-    http: PostgrestHTTPClient? = nil
-  ) {
-    config = PostgrestClientConfig(
-      url: url,
-      headers: headers,
-      schema: schema,
-      http: http
-    )
-  }
-
-  /// Initializes the `PostgrestClient` with a config object
-  /// - Parameter config: A `PostgrestClientConfig` struct with the correct parameters
-  public init(config: PostgrestClientConfig) {
-    self.config = config
-  }
-
-  /// Authenticates the request with JWT.
-  /// - Parameter token: The JWT token to use.
-  public func auth(_ token: String) -> PostgrestClient {
-    config.headers["Authorization"] = "Bearer \(token)"
-    return self
-  }
-
-  /// Select a table to query from
-  /// - Parameter table: The ID of the table to query
-  /// - Returns: `PostgrestQueryBuilder`
+  /// Perform a query on a table or a view.
+  /// - Parameter table: The table or view name to query.
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       client: self,
-      url: "\(config.url)/\(table)",
-      headers: config.headers,
-      schema: config.schema,
-      method: nil,
-      body: nil,
-      http: config.http
+      request: Request(url: url.appendingPathComponent(table)),
+      schema: schema
     )
   }
 
@@ -77,19 +47,20 @@ public class PostgrestClient {
   /// - Parameters:
   ///   - fn: The function name to call.
   ///   - params: The parameters to pass to the function call.
+  ///   - count:  Count algorithm to use to count rows returned by the function. Only applicable for
+  /// [set-returning functions](https://www.postgresql.org/docs/current/functions-srf.html).
   public func rpc<U: Encodable>(
     fn: String,
-    params: U?,
+    params: U,
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
       client: self,
-      url: "\(config.url)/rpc/\(fn)",
-      headers: config.headers,
-      schema: config.schema,
-      method: nil,
-      body: nil,
-      http: config.http
+      request: Request(
+        url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
+        method: .post
+      ),
+      schema: schema
     ).rpc(params: params, count: count)
   }
 
@@ -97,10 +68,27 @@ public class PostgrestClient {
   /// - Parameters:
   ///   - fn: The function name to call.
   ///   - params: The parameters to pass to the function call.
+  ///   - count:  Count algorithm to use to count rows returned by the function. Only applicable for
+  /// [set-returning functions](https://www.postgresql.org/docs/current/functions-srf.html).
   public func rpc(
     fn: String,
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
-    rpc(fn: fn, params: EmptyParams(), count: count)
+    rpc(fn: fn, params: NoParams(), count: count)
+  }
+}
+
+struct PostgrestAPIClientDelegate: APIClientDelegate {
+  func client(
+    _ client: APIClient,
+    validateResponse response: HTTPURLResponse,
+    data: Data,
+    task _: URLSessionTask
+  ) throws {
+    if 200 ..< 300 ~= response.statusCode {
+      return
+    }
+
+    throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
 }

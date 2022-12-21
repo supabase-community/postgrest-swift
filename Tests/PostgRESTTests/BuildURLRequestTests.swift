@@ -1,5 +1,6 @@
 #if !os(watchOS)
   import Foundation
+  import Get
   import SnapshotTesting
   import XCTest
 
@@ -9,37 +10,52 @@
     import FoundationNetworking
   #endif
 
+  @MainActor
   final class BuildURLRequestTests: XCTestCase {
-    let url = "https://example.supabase.co"
+    let url = URL(string: "https://example.supabase.co")!
 
     struct TestCase {
       let name: String
       var record = false
-      let build: (PostgrestClient) throws -> URLRequest
+      let build: (PostgrestClient) -> PostgrestBuilder
     }
 
-    func testBuildURLRequest() throws {
-      let client = PostgrestClient(url: url, schema: nil)
+    func testBuildRequest() async throws {
+      @MainActor
+      class Delegate: APIClientDelegate {
+        var testCase: TestCase!
+
+        func client(_: APIClient, willSendRequest request: inout URLRequest) async throws {
+          assertSnapshot(
+            matching: request,
+            as: .curl,
+            named: testCase.name,
+            record: testCase.record,
+            testName: "testBuildRequest()"
+          )
+
+          struct SomeError: Error {}
+          throw SomeError()
+        }
+      }
+      let delegate = Delegate()
+      let client = PostgrestClient(url: url, schema: nil, apiClientDelegate: delegate)
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-          try client.from("users")
+          client.from("users")
             .select()
             .like(column: "email", value: "%@supabase.co")
-            .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "insert new user") { client in
-          try client.from("users")
+          client.from("users")
             .insert(values: ["email": "johndoe@supabase.io"])
-            .buildURLRequest(head: false, count: nil)
         },
         TestCase(name: "call rpc") { client in
-          try client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
-            .buildURLRequest(head: false, count: nil)
+          client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
         },
         TestCase(name: "call rpc without parameter") { client in
-          try client.rpc(fn: "test_fcn")
-            .buildURLRequest(head: false, count: nil)
+          client.rpc(fn: "test_fcn")
         },
         TestCase(name: "test all filters and count") { client in
           var query = client.from("todos").select()
@@ -48,18 +64,26 @@
             query = query.filter(column: "column", operator: op, value: "Some value")
           }
 
-          return try query.buildURLRequest(head: false, count: .exact)
+          return query
         },
         TestCase(name: "test in filter") { client in
-          try client.from("todos").select().in(column: "id", value: [1, 2, 3])
-            .buildURLRequest(head: false, count: nil)
+          client.from("todos").select().in(column: "id", value: [1, 2, 3])
         },
       ]
 
       for testCase in testCases {
-        let request = try testCase.build(client)
-        assertSnapshot(matching: request, as: .curl, named: testCase.name, record: testCase.record)
+        delegate.testCase = testCase
+        let builder = testCase.build(client)
+        builder.adaptRequest(head: false, count: nil)
+        _ = try? await builder.execute()
       }
+    }
+
+    func testSessionConfiguration() {
+      let client = PostgrestClient(url: url, schema: nil)
+      let clientInfoHeader = client.api.configuration.sessionConfiguration
+        .httpAdditionalHeaders?["X-Client-Info"]
+      XCTAssertNotNil(clientInfoHeader)
     }
   }
 #endif

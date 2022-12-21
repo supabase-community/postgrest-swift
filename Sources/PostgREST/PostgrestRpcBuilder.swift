@@ -1,14 +1,10 @@
-import AnyCodable
-
-public struct EmptyParams: Encodable {
-  public init() {}
-}
+struct NoParams: Encodable {}
 
 public final class PostgrestRpcBuilder: PostgrestBuilder {
   /// Perform a function call with params.
   /// - Parameter params: The function params.
-  public func rpc<U: Encodable>(
-    params: U?,
+  func rpc<U: Encodable>(
+    params: U,
     head: Bool = false,
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
@@ -17,10 +13,10 @@ public final class PostgrestRpcBuilder: PostgrestBuilder {
     assert(head == false, "HEAD is not currently supported yet.")
 
     method = "POST"
-    if params is EmptyParams {
-      body = nil
+    if params is NoParams {
+      // noop
     } else {
-      body = AnyEncodable(params)
+      body = params
     }
 
     if let count = count {

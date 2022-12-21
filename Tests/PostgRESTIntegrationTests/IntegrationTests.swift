@@ -26,7 +26,7 @@ struct NewTodo: Codable, Hashable {
 @available(iOS 15.0.0, macOS 12.0.0, tvOS 13.0, *)
 final class IntegrationTests: XCTestCase {
   let client = PostgrestClient(
-    url: "http://localhost:54321/rest/v1",
+    url: URL(string: "http://localhost:54321/rest/v1")!,
     headers: [
       "apikey":
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs",
@@ -47,7 +47,7 @@ final class IntegrationTests: XCTestCase {
   }
 
   func testIntegration() async throws {
-    var todos = try await client.from("todo").select().execute().decoded(to: [Todo].self)
+    var todos = try await client.from("todo").select().execute(returning: [Todo].self).value
     XCTAssertEqual(todos, [])
 
     let insertedTodo = try await client.from("todo")
@@ -55,10 +55,11 @@ final class IntegrationTests: XCTestCase {
         values: NewTodo(description: "Implement integration tests for postgrest-swift"),
         returning: .representation
       )
-      .execute()
-      .decoded(to: [Todo].self)[0]
+      .single()
+      .execute(returning: Todo.self)
+      .value
 
-    todos = try await client.from("todo").select().execute().decoded()
+    todos = try await client.from("todo").select().execute().value
     XCTAssertEqual(todos, [insertedTodo])
 
     let insertedTodos = try await client.from("todo")
@@ -69,29 +70,30 @@ final class IntegrationTests: XCTestCase {
         ],
         returning: .representation
       )
-      .execute()
-      .decoded(to: [Todo].self)
+      .execute(returning: [Todo].self)
+      .value
 
-    todos = try await client.from("todo").select().execute().decoded()
+    todos = try await client.from("todo").select().execute().value
     XCTAssertEqual(todos, [insertedTodo] + insertedTodos)
 
     let drinkCoffeeTodo = insertedTodos[1]
     let updatedTodo = try await client.from("todo")
       .update(values: ["is_complete": true])
       .eq(column: "id", value: drinkCoffeeTodo.id.uuidString)
-      .execute()
-      .decoded(to: [Todo].self)[0]
+      .single()
+      .execute(returning: Todo.self)
+      .value
     XCTAssertTrue(updatedTodo.isComplete)
 
     let completedTodos = try await client.from("todo")
       .select()
       .eq(column: "is_complete", value: true)
-      .execute()
-      .decoded(to: [Todo].self)
+      .execute(returning: [Todo].self)
+      .value
     XCTAssertEqual(completedTodos, [updatedTodo])
 
     try await client.from("todo").delete().eq(column: "is_complete", value: true).execute()
-    todos = try await client.from("todo").select().execute().decoded(to: [Todo].self)
+    todos = try await client.from("todo").select().execute().value
     XCTAssertTrue(completedTodos.allSatisfy { todo in !todos.contains(todo) })
   }
 }

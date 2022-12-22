@@ -39,10 +39,10 @@ final class IntegrationTests: XCTestCase {
   override func setUp() async throws {
     try await super.setUp()
 
-//    try XCTSkipUnless(
-//      ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] != nil,
-//      "INTEGRATION_TESTS not defined."
-//    )
+    try XCTSkipUnless(
+      ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] != nil,
+      "INTEGRATION_TESTS not defined."
+    )
 
     // Run fresh test by deleting all todos.
     try await client.from("todo").delete().execute()

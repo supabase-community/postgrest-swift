@@ -5,11 +5,13 @@ struct Todo: Codable, Hashable {
   let id: UUID
   var description: String
   var isComplete: Bool
+  let createdAt: Date
 
   enum CodingKeys: String, CodingKey {
     case id
     case description
     case isComplete = "is_complete"
+    case createdAt = "created_at"
   }
 }
 
@@ -29,7 +31,7 @@ final class IntegrationTests: XCTestCase {
     url: URL(string: "http://localhost:54321/rest/v1")!,
     headers: [
       "apikey":
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.625_WdcF3KHqz5amU0x2X5WWHP-OEs_4qj0ssLNHzTs",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
     ],
     schema: "public"
   )
@@ -37,10 +39,10 @@ final class IntegrationTests: XCTestCase {
   override func setUp() async throws {
     try await super.setUp()
 
-    try XCTSkipUnless(
-      ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] != nil,
-      "INTEGRATION_TESTS not defined."
-    )
+//    try XCTSkipUnless(
+//      ProcessInfo.processInfo.environment["INTEGRATION_TESTS"] != nil,
+//      "INTEGRATION_TESTS not defined."
+//    )
 
     // Run fresh test by deleting all todos.
     try await client.from("todo").delete().execute()

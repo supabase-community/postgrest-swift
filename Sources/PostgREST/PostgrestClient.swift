@@ -25,6 +25,8 @@ public class PostgrestClient {
       var headers = headers
       headers["X-Client-Info"] = "postgrest-swift/\(version)"
       $0.sessionConfiguration.httpAdditionalHeaders = headers
+      $0.decoder = .postgrest
+      $0.encoder = .postgrest
       if let customDelegate = apiClientDelegate {
         $0.delegate = MultiAPIClientDelegate([PostgrestAPIClientDelegate(), customDelegate])
       } else {
@@ -91,4 +93,46 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
 
     throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
+}
+
+private let supportedDateFormatters: [ISO8601DateFormatter] = [
+  { () -> ISO8601DateFormatter in
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter
+  }(),
+  { () -> ISO8601DateFormatter in
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter
+  }(),
+]
+
+extension JSONDecoder {
+  static let postgrest = { () -> JSONDecoder in
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder in
+      let container = try decoder.singleValueContainer()
+      let string = try container.decode(String.self)
+
+      for formatter in supportedDateFormatters {
+        if let date = formatter.date(from: string) {
+          return date
+        }
+      }
+
+      throw DecodingError.dataCorruptedError(
+        in: container, debugDescription: "Invalid date format: \(string)"
+      )
+    }
+    return decoder
+  }()
+}
+
+extension JSONEncoder {
+  static let postgrest = { () -> JSONEncoder in
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    return encoder
+  }()
 }

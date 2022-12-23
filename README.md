@@ -19,70 +19,7 @@ Add `postgrest-swift` as a dependency to your `Package.swift` file. For more inf
 You can also install the [ `supabase-swift`](https://github.com/supabase/supabase-swift) package to use the entire supabase library.
 
 ## Usage
-
-```swift
-import Foundation
-import PostgREST
-
-let supabaseUrl = ""
-let supabaseKey = ""
-
-var client = PostgrestClient(
-    url: "\(supabaseUrl)/rest/v1",
-    headers: ["apikey": supabaseKey],
-    schema: "public")
-
-struct Todo: Codable, Hashable {
-  let id: UUID
-  var description: String
-  var isComplete: Bool
-
-  enum CodingKeys: String, CodingKey {
-    case id
-    case description
-    case isComplete = "is_complete"
-  }
-}
-
-struct NewTodo: Codable, Hashable {
-  var description: String
-  var isComplete: Bool = false
-
-  enum CodingKeys: String, CodingKey {
-    case description
-    case isComplete = "is_complete"
-  }
-}
-
-// Get todos
-var todos = try await client
-    .from("todo")
-    .select()
-    .execute()
-    .decoded(to: [Todo].self)
-
-// Insert a todo
-let insertedTodo = try await client.from("todo")
-    .insert(values: NewTodo(description: "Implement integration tests for postgrest-swift"))
-    .execute()
-    .decoded(to: [Todo].self)[0]
-
-// Insert multiple todos
-let insertedTodos = try await client.from("todo")
-    .insert(values: [
-        NewTodo(description: "Make supabase swift libraries production ready"),
-        NewTodo(description: "Drink some coffee"),
-    ])
-    .execute()
-    .decoded(to: [Todo].self)
-
-// You can call Postgres functions as a "Remote Procedure Call" (rpc).
-// Update a todo to isComplete true status.
-let completedTodo = try await client
-    .rpc(fn: "complete_todo", params: ["id": "1"])
-    .execute()
-    .decoded(to: [Todo].self)
-```
+Check integration tests for usage examples: [IntegrationTests.swift](/Tests/PostgRESTIntegrationTests/IntegrationTests.swift)
 
 ## Contributing
 

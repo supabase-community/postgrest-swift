@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "GetExtensions",
+        "repositoryURL": "https://github.com/binaryscraping/GetExtensions",
+        "state": {
+          "branch": null,
+          "revision": "aa20f38721142eb6592b2c8f11179d32d7d70ae3",
+          "version": "1.0.0"
+        }
+      },
+      {
         "package": "swift-snapshot-testing",
         "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
         "state": {

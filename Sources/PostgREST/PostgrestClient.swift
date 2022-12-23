@@ -1,5 +1,6 @@
 import Foundation
 import Get
+import GetExtensions
 
 /// PostgREST client.
 public class PostgrestClient {
@@ -28,7 +29,7 @@ public class PostgrestClient {
       $0.decoder = .postgrest
       $0.encoder = .postgrest
       if let customDelegate = apiClientDelegate {
-        $0.delegate = MultiAPIClientDelegate([PostgrestAPIClientDelegate(), customDelegate])
+        $0.delegate = MultiAPIClientDelegate([customDelegate, PostgrestAPIClientDelegate()])
       } else {
         $0.delegate = PostgrestAPIClientDelegate()
       }

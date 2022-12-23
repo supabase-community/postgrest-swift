@@ -56,7 +56,6 @@ public class PostgrestBuilder {
 
   @discardableResult
   public func execute<T: Decodable>(
-    returning _: T.Type = T.self,
     head: Bool = false,
     count: CountOption? = nil
   ) async throws -> PostgrestResponse<T> {

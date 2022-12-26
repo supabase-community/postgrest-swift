@@ -73,8 +73,8 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
     return self
   }
 
-  public func contains(column: String, value: URLQueryRepresentable) -> PostgrestFilterBuilder {
-    appendSearchParams(name: column, value: "cs.\(value.queryValue)")
+  public func contains(column: String, value: [URLQueryRepresentable]) -> PostgrestFilterBuilder {
+    appendSearchParams(name: column, value: "cs.(\(value.map(\.queryValue).joined(separator: ",")))")
     return self
   }
 
@@ -104,8 +104,8 @@ public class PostgrestFilterBuilder: PostgrestTransformBuilder {
     return self
   }
 
-  public func overlaps(column: String, value: URLQueryRepresentable) -> PostgrestFilterBuilder {
-    appendSearchParams(name: column, value: "ov.\(value.queryValue)")
+  public func overlaps(column: String, value: [URLQueryRepresentable]) -> PostgrestFilterBuilder {
+    appendSearchParams(name: column, value: "ov.(\(value.map(\.queryValue).joined(separator: ",")))")
     return self
   }
 

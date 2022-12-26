@@ -25,3 +25,15 @@ extension Bool: URLQueryRepresentable {
 extension UUID: URLQueryRepresentable {
   public var queryValue: String { uuidString }
 }
+
+extension Array: URLQueryRepresentable where Element: URLQueryRepresentable {
+  public var queryValue: String {
+      self.map(\.queryValue).joined(separator: ",")
+  }
+}
+
+extension Dictionary: URLQueryRepresentable where Element: URLQueryRepresentable {
+  public var queryValue: String {
+      self.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+  }
+}

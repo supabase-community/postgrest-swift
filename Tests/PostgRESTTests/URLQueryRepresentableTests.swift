@@ -2,7 +2,11 @@ import PostgREST
 import XCTest
 
 final class URLQueryRepresentableTests: XCTestCase {
-  func testArray() {}
+  func testArray() {
+    let array = ["is:online", "faction:red"]
+    let queryValue = array.queryValue
+    XCTAssertEqual(queryValue, "{is:online,faction:red}")
+  }
 
   func testDictionary() {
     let dictionary = ["postalcode": 90210]

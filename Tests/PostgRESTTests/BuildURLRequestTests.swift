@@ -69,6 +69,15 @@
         TestCase(name: "test in filter") { client in
           client.from("todos").select().in(column: "id", value: [1, 2, 3])
         },
+        TestCase(name: "test contains filter with dictionary") { client in
+          client.from("users").select(columns: "name")
+            .contains(column: "address", value: ["postcode": 90210])
+        },
+        TestCase(name: "test contains filter with array") { client in
+          client.from("users")
+            .select()
+            .contains(column: "name", value: ["is:online", "faction:red"])
+        },
       ]
 
       for testCase in testCases {

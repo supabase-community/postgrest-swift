@@ -28,12 +28,26 @@ extension UUID: URLQueryRepresentable {
 
 extension Array: URLQueryRepresentable where Element: URLQueryRepresentable {
   public var queryValue: String {
-      self.map(\.queryValue).joined(separator: ",")
+    "{\(map(\.queryValue).joined(separator: ","))}"
   }
 }
 
-extension Dictionary: URLQueryRepresentable where Element: URLQueryRepresentable {
+extension Dictionary: URLQueryRepresentable where Key: URLQueryRepresentable,
+  Value: URLQueryRepresentable
+{
   public var queryValue: String {
-      self.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+    JSONSerialization.stringfy(self)
+  }
+}
+
+extension JSONSerialization {
+  static func stringfy(_ object: Any) -> String {
+    guard
+      let data = try? data(withJSONObject: object, options: [.withoutEscapingSlashes, .sortedKeys]),
+      let string = String(data: data, encoding: .utf8)
+    else {
+      return "{}"
+    }
+    return string
   }
 }

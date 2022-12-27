@@ -1,0 +1,4 @@
+curl \
+	--header "Accept: application/json" \
+	--header "Content-Type: application/json" \
+	"https://example.supabase.co/users?address=cs.%7B%22postcode%22:90210%7D&select=name"

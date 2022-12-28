@@ -25,3 +25,29 @@ extension Bool: URLQueryRepresentable {
 extension UUID: URLQueryRepresentable {
   public var queryValue: String { uuidString }
 }
+
+extension Array: URLQueryRepresentable where Element: URLQueryRepresentable {
+  public var queryValue: String {
+    "{\(map(\.queryValue).joined(separator: ","))}"
+  }
+}
+
+extension Dictionary: URLQueryRepresentable where Key: URLQueryRepresentable,
+  Value: URLQueryRepresentable
+{
+  public var queryValue: String {
+    JSONSerialization.stringfy(self)
+  }
+}
+
+extension JSONSerialization {
+  static func stringfy(_ object: Any) -> String {
+    guard
+      let data = try? data(withJSONObject: object, options: [.withoutEscapingSlashes, .sortedKeys]),
+      let string = String(data: data, encoding: .utf8)
+    else {
+      return "{}"
+    }
+    return string
+  }
+}

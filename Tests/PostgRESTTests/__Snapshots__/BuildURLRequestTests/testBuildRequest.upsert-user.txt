@@ -1,0 +1,7 @@
+curl \
+	--request POST \
+	--header "Accept: application/json" \
+	--header "Content-Type: application/json" \
+	--header "Prefer: resolution=merge-duplicates,return=minimal" \
+	--data "{\"id\":\"69b3f37a-ff3b-4c66-a4ab-038b70e5c762\",\"name\":\"John Doe\"}" \
+	"https://example.supabase.co/users"

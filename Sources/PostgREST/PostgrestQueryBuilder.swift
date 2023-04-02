@@ -79,11 +79,11 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     onConflict: String? = nil,
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil,
-    ignoreDuplicates: Bool? = nil
+    ignoreDuplicates: Bool = false
   ) -> PostgrestFilterBuilder {
     method = "POST"
     var prefersHeaders = [
-      ignoreDuplicates.map { "resolution=\($0 ? "ignore" : "merge")-duplicates" },
+      "resolution=\(ignoreDuplicates ? "ignore" : "merge")-duplicates",
       "return=\(returning.rawValue)",
     ]
     .compactMap { $0 }

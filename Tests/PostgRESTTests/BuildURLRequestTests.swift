@@ -51,6 +51,13 @@
           client.from("users")
             .insert(values: ["email": "johndoe@supabase.io"])
         },
+        TestCase(name: "upsert user") { client in
+          client.from("users")
+            .upsert(
+              values: ["id": "69b3f37a-ff3b-4c66-a4ab-038b70e5c762", "name": "John Doe"],
+              returning: .minimal
+            )
+        },
         TestCase(name: "call rpc") { client in
           client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
         },

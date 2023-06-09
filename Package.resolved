@@ -2,30 +2,12 @@
   "object": {
     "pins": [
       {
-        "package": "Get",
-        "repositoryURL": "https://github.com/kean/Get",
-        "state": {
-          "branch": null,
-          "revision": "7209fdb015686fd90918b2037cb2039206405bd3",
-          "version": "2.1.5"
-        }
-      },
-      {
-        "package": "GetExtensions",
-        "repositoryURL": "https://github.com/binaryscraping/GetExtensions",
-        "state": {
-          "branch": null,
-          "revision": "aa20f38721142eb6592b2c8f11179d32d7d70ae3",
-          "version": "1.0.0"
-        }
-      },
-      {
         "package": "swift-snapshot-testing",
-        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
+        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
         "state": {
           "branch": null,
-          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
-          "version": "1.10.0"
+          "revision": "cef5b3f6f11781dd4591bdd1dd0a3d22bd609334",
+          "version": "1.11.0"
         }
       }
     ]

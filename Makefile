@@ -7,8 +7,7 @@ test-library:
 	for platform in "$(PLATFORM_IOS)" "$(PLATFORM_MACOS)" "$(PLATFORM_TVOS)"; do \
 		xcodebuild test \
 			-scheme PostgREST \
-			-destination platform="$$platform" \
-			-derivedDataPath .deriveddata || exit 1; \
+			-destination platform="$$platform" || exit 1; \
 	done;
 
 .PHONY: format

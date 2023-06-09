@@ -45,11 +45,13 @@ final class IntegrationTests: XCTestCase {
     )
 
     // Run fresh test by deleting all todos.
-    try await client.from("todo").delete().execute()
+    let ids: [[String: UUID]] = try await client.from("todo").select(columns: "id").execute().result
+      .get()
+    try await client.from("todo").delete().in(column: "id", value: ids.flatMap(\.values)).execute()
   }
 
   func testIntegration() async throws {
-    var todos: [Todo] = try await client.from("todo").select().execute().value
+    var todos: [Todo] = try await client.from("todo").select().execute().result.get()
     XCTAssertEqual(todos, [])
 
     let insertedTodo: Todo = try await client.from("todo")
@@ -59,9 +61,10 @@ final class IntegrationTests: XCTestCase {
       )
       .single()
       .execute()
-      .value
+      .result
+      .get()
 
-    todos = try await client.from("todo").select().execute().value
+    todos = try await client.from("todo").select().execute().result.get()
     XCTAssertEqual(todos, [insertedTodo])
 
     let insertedTodos: [Todo] = try await client.from("todo")
@@ -73,9 +76,9 @@ final class IntegrationTests: XCTestCase {
         returning: .representation
       )
       .execute()
-      .value
+      .result.get()
 
-    todos = try await client.from("todo").select().execute().value
+    todos = try await client.from("todo").select().execute().result.get()
     XCTAssertEqual(todos, [insertedTodo] + insertedTodos)
 
     let drinkCoffeeTodo = insertedTodos[1]
@@ -84,18 +87,18 @@ final class IntegrationTests: XCTestCase {
       .eq(column: "id", value: drinkCoffeeTodo.id.uuidString)
       .single()
       .execute()
-      .value
+      .result.get()
     XCTAssertTrue(updatedTodo.isComplete)
 
     let completedTodos: [Todo] = try await client.from("todo")
       .select()
       .eq(column: "is_complete", value: true)
       .execute()
-      .value
+      .result.get()
     XCTAssertEqual(completedTodos, [updatedTodo])
 
     try await client.from("todo").delete().eq(column: "is_complete", value: true).execute()
-    todos = try await client.from("todo").select().execute().value
+    todos = try await client.from("todo").select().execute().result.get()
     XCTAssertTrue(completedTodos.allSatisfy { todo in !todos.contains(todo) })
   }
 }

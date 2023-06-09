@@ -1,34 +1,41 @@
 import Foundation
-import Get
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
 #endif
 
 public class PostgrestBuilder {
+  struct Request {
+    var url: String
+    var query: [(name: String, value: String?)] = []
+    var headers: [String: String] = [:]
+    var method: String = "GET"
+    var body: Encodable?
+  }
+
   var client: PostgrestClient
-  var request: Request<Data>
+  var request: Request
 
   var url: String {
-    get { request.url?.absoluteString ?? "" }
-    set { request.url = URL(string: newValue) }
+    get { request.url }
+    set { request.url = newValue }
   }
 
   var queryParams: [(name: String, value: String?)] {
-    get { request.query ?? [] }
+    get { request.query }
     set { request.query = newValue }
   }
 
   var headers: [String: String] {
-    get { request.headers ?? [:] }
+    get { request.headers }
     set { request.headers = newValue }
   }
 
   var schema: String?
 
   var method: String {
-    get { request.method.rawValue }
-    set { request.method = HTTPMethod(rawValue: newValue) }
+    get { request.method }
+    set { request.method = newValue }
   }
 
   var body: Encodable? {
@@ -36,11 +43,7 @@ public class PostgrestBuilder {
     set { request.body = newValue }
   }
 
-  init(
-    client: PostgrestClient,
-    request: Request<Data>,
-    schema: String?
-  ) {
+  init(client: PostgrestClient, request: Request, schema: String?) {
     self.client = client
     self.request = request
     self.schema = schema
@@ -59,9 +62,10 @@ public class PostgrestBuilder {
     head: Bool = false,
     count: CountOption? = nil
   ) async throws -> PostgrestResponse<T> {
-    adaptRequest(head: head, count: count)
-    let response = try await client.api.send(request.withResponse(T.self))
-    return PostgrestResponse(underlyingResponse: response)
+    let request = try makeRequest(head: head, count: count)
+    return try await performRequest(request) { data in
+      try JSONDecoder.postgrest.decode(T.self, from: data)
+    }
   }
 
   @discardableResult
@@ -69,9 +73,8 @@ public class PostgrestBuilder {
     head: Bool = false,
     count: CountOption? = nil
   ) async throws -> PostgrestResponse<Void> {
-    adaptRequest(head: head, count: count)
-    let response = try await client.api.send(request.withResponse(Void.self))
-    return PostgrestResponse(underlyingResponse: response)
+    let request = try makeRequest(head: head, count: count)
+    return try await performRequest(request) { _ in () }
   }
 
   func adaptRequest(head: Bool, count: CountOption?) {
@@ -100,5 +103,54 @@ public class PostgrestBuilder {
 
   func appendSearchParams(name: String, value: String) {
     queryParams.append((name, value))
+  }
+
+  private func performRequest<T>(
+    _ request: URLRequest,
+    decode: (Data) throws -> T
+  ) async throws -> PostgrestResponse<T> {
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw URLError(.badServerResponse)
+    }
+
+    guard 200 ..< 300 ~= httpResponse.statusCode else {
+      throw URLError(.badServerResponse)
+    }
+
+    let result = Result {
+      try decode(data)
+    }
+
+    return PostgrestResponse(result: result, underlyingResponse: httpResponse)
+  }
+
+  private func makeRequest(head: Bool, count: CountOption?) throws -> URLRequest {
+    adaptRequest(head: head, count: count)
+
+    guard var urlComponents = URLComponents(string: url) else {
+      throw URLError(.badURL)
+    }
+
+    if !queryParams.isEmpty {
+      let queryItems = queryParams.map { URLQueryItem(name: $0.name, value: $0.value) }
+      urlComponents.queryItems = urlComponents.queryItems ?? []
+      urlComponents.queryItems!.append(contentsOf: queryItems)
+    }
+
+    guard let url = urlComponents.url else { throw URLError(.badURL) }
+    var request = URLRequest(url: url)
+    request.httpMethod = method
+
+    if let body {
+      request.httpBody = try JSONEncoder.postgrest.encode(body)
+    }
+
+    headers.forEach { key, value in
+      request.setValue(value, forHTTPHeaderField: key)
+    }
+
+    return request
   }
 }

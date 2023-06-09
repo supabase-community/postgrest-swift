@@ -1,39 +1,40 @@
 import Foundation
-import Get
-import GetExtensions
 
 /// PostgREST client.
 public class PostgrestClient {
+  public typealias Fetch = (URLRequest) async throws -> (Data, URLResponse)
+
   let url: URL
   let schema: String?
-  let api: APIClient
+  var fetch: Fetch
 
   /// Creates a PostgREST client.
   /// - Parameters:
   ///   - url: URL of the PostgREST endpoint.
   ///   - headers: Custom headers.
   ///   - schema: Postgres schema to switch to.
-  ///   - apiClientDelegate: Custom APIClientDelegate for the underlying APIClient.
+  ///   - fetch: Custom ``Fetch`` implementation for the underlying api calls.
   public init(
     url: URL,
-    headers: [String: String] = [:],
+    headers _: [String: String] = [:],
     schema: String?,
-    apiClientDelegate: APIClientDelegate? = nil
+    fetch: Fetch? = nil
   ) {
     self.url = url
     self.schema = schema
-    api = APIClient(baseURL: nil) {
-      var headers = headers
-      headers["X-Client-Info"] = "postgrest-swift/\(version)"
-      $0.sessionConfiguration.httpAdditionalHeaders = headers
-      $0.decoder = .postgrest
-      $0.encoder = .postgrest
-      if let customDelegate = apiClientDelegate {
-        $0.delegate = MultiAPIClientDelegate([customDelegate, PostgrestAPIClientDelegate()])
-      } else {
-        $0.delegate = PostgrestAPIClientDelegate()
-      }
-    }
+    self.fetch = fetch ?? URLSession.shared.data(for:)
+//    api = APIClient(baseURL: nil) {
+//      var headers = headers
+//      headers["X-Client-Info"] = "postgrest-swift/\(version)"
+//      $0.sessionConfiguration.httpAdditionalHeaders = headers
+//      $0.decoder = .postgrest
+//      $0.encoder = .postgrest
+//      if let customDelegate = apiClientDelegate {
+//        $0.delegate = MultiAPIClientDelegate([customDelegate, PostgrestAPIClientDelegate()])
+//      } else {
+//        $0.delegate = PostgrestAPIClientDelegate()
+//      }
+//    }
   }
 
   /// Perform a query on a table or a view.
@@ -41,7 +42,7 @@ public class PostgrestClient {
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       client: self,
-      request: Request(url: url.appendingPathComponent(table)),
+      request: .init(url: url.appendingPathComponent(table).absoluteString),
       schema: schema
     )
   }
@@ -59,9 +60,9 @@ public class PostgrestClient {
   ) -> PostgrestTransformBuilder {
     PostgrestRpcBuilder(
       client: self,
-      request: Request(
-        url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
-        method: .post
+      request: .init(
+        url: url.appendingPathComponent("rpc").appendingPathComponent(fn).absoluteString,
+        method: "POST"
       ),
       schema: schema
     ).rpc(params: params, count: count)
@@ -78,21 +79,6 @@ public class PostgrestClient {
     count: CountOption? = nil
   ) -> PostgrestTransformBuilder {
     rpc(fn: fn, params: NoParams(), count: count)
-  }
-}
-
-struct PostgrestAPIClientDelegate: APIClientDelegate {
-  func client(
-    _ client: APIClient,
-    validateResponse response: HTTPURLResponse,
-    data: Data,
-    task _: URLSessionTask
-  ) throws {
-    if 200 ..< 300 ~= response.statusCode {
-      return
-    }
-
-    throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
 }
 

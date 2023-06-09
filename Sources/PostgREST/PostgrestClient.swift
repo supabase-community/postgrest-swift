@@ -23,18 +23,6 @@ public class PostgrestClient {
     self.url = url
     self.schema = schema
     self.fetch = fetch ?? URLSession.shared.data(for:)
-//    api = APIClient(baseURL: nil) {
-//      var headers = headers
-//      headers["X-Client-Info"] = "postgrest-swift/\(version)"
-//      $0.sessionConfiguration.httpAdditionalHeaders = headers
-//      $0.decoder = .postgrest
-//      $0.encoder = .postgrest
-//      if let customDelegate = apiClientDelegate {
-//        $0.delegate = MultiAPIClientDelegate([customDelegate, PostgrestAPIClientDelegate()])
-//      } else {
-//        $0.delegate = PostgrestAPIClientDelegate()
-//      }
-//    }
   }
 
   /// Perform a query on a table or a view.

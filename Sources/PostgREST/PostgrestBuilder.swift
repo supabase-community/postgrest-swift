@@ -116,7 +116,7 @@ public class PostgrestBuilder {
     }
 
     guard 200 ..< 300 ~= httpResponse.statusCode else {
-      throw URLError(.badServerResponse)
+      throw try JSONDecoder.postgrest.decode(PostgrestError.self, from: data)
     }
 
     let result = Result {

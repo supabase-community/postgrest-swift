@@ -1,67 +1,48 @@
 import Foundation
-import Get
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
 #endif
 
 public class PostgrestBuilder {
-  var client: PostgrestClient
-  var request: Request<Data>
+  let client: PostgrestClient
+  let url: URL
+  var queryParams: [(name: String, value: String?)]
+  var headers: [String: String]
+  let schema: String?
+  var method: String
+  var body: Data?
 
-  var url: String {
-    get { request.url?.absoluteString ?? "" }
-    set { request.url = URL(string: newValue) }
-  }
-
-  var queryParams: [(name: String, value: String?)] {
-    get { request.query ?? [] }
-    set { request.query = newValue }
-  }
-
-  var headers: [String: String] {
-    get { request.headers ?? [:] }
-    set { request.headers = newValue }
-  }
-
-  var schema: String?
-
-  var method: String {
-    get { request.method.rawValue }
-    set { request.method = HTTPMethod(rawValue: newValue) }
-  }
-
-  var body: Encodable? {
-    get { request.body }
-    set { request.body = newValue }
-  }
+  var fetchOptions = FetchOptions()
 
   init(
     client: PostgrestClient,
-    request: Request<Data>,
-    schema: String?
+    url: URL,
+    queryParams: [(name: String, value: String?)],
+    headers: [String: String],
+    schema: String?,
+    method: String,
+    body: Data?
   ) {
     self.client = client
-    self.request = request
+    self.url = url
+    self.queryParams = queryParams
+    self.headers = headers
     self.schema = schema
+    self.method = method
+    self.body = body
   }
 
   convenience init(_ other: PostgrestBuilder) {
     self.init(
       client: other.client,
-      request: other.request,
-      schema: other.schema
+      url: other.url,
+      queryParams: other.queryParams,
+      headers: other.headers,
+      schema: other.schema,
+      method: other.method,
+      body: other.body
     )
-  }
-
-  @discardableResult
-  public func execute<T: Decodable>(
-    head: Bool = false,
-    count: CountOption? = nil
-  ) async throws -> PostgrestResponse<T> {
-    adaptRequest(head: head, count: count)
-    let response = try await client.api.send(request.withResponse(T.self))
-    return PostgrestResponse(underlyingResponse: response)
   }
 
   @discardableResult
@@ -69,17 +50,31 @@ public class PostgrestBuilder {
     head: Bool = false,
     count: CountOption? = nil
   ) async throws -> PostgrestResponse<Void> {
-    adaptRequest(head: head, count: count)
-    let response = try await client.api.send(request.withResponse(Void.self))
-    return PostgrestResponse(underlyingResponse: response)
+    fetchOptions = FetchOptions(head: head, count: count)
+    return try await execute { _ in () }
   }
 
-  func adaptRequest(head: Bool, count: CountOption?) {
-    if head {
+  @discardableResult
+  public func execute<T: Decodable>(
+    head: Bool = false,
+    count: CountOption? = nil
+  ) async throws -> PostgrestResponse<T> {
+    fetchOptions = FetchOptions(head: head, count: count)
+    return try await execute { [decoder = client.decoder] data in
+      try decoder.decode(T.self, from: data)
+    }
+  }
+
+  func appendSearchParams(name: String, value: String) {
+    queryParams.append((name, value))
+  }
+
+  private func execute<T>(decode: (Data) throws -> T) async throws -> PostgrestResponse<T> {
+    if fetchOptions.head {
       method = "HEAD"
     }
 
-    if let count = count {
+    if let count = fetchOptions.count {
       if let prefer = headers["Prefer"] {
         headers["Prefer"] = "\(prefer),count=\(count.rawValue)"
       } else {
@@ -96,9 +91,48 @@ public class PostgrestBuilder {
         headers["Content-Profile"] = schema
       }
     }
+
+    let urlRequest = try makeURLRequest()
+
+    let (data, response) = try await client.session.data(for: urlRequest)
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw URLError(.badServerResponse)
+    }
+
+    guard 200 ..< 300 ~= httpResponse.statusCode else {
+      let error = try client.decoder.decode(PostgrestError.self, from: data)
+      throw error
+    }
+
+    let value = try decode(data)
+    return PostgrestResponse(data: data, response: httpResponse, value: value)
   }
 
-  func appendSearchParams(name: String, value: String) {
-    queryParams.append((name, value))
+  private func makeURLRequest() throws -> URLRequest {
+    guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+      throw URLError(.badURL)
+    }
+
+    if !queryParams.isEmpty {
+      components.queryItems = queryParams.map(URLQueryItem.init)
+    }
+
+    guard let url = components.url else {
+      throw URLError(.badURL)
+    }
+
+    var urlRequest = URLRequest(url: url)
+
+    for (key, value) in headers {
+      urlRequest.setValue(value, forHTTPHeaderField: key)
+    }
+
+    urlRequest.httpMethod = method
+
+    if let body {
+      urlRequest.httpBody = try client.encoder.encode(body)
+    }
+
+    return urlRequest
   }
 }

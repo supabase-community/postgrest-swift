@@ -1,3 +1,5 @@
+import Foundation
+
 public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs a vertical filtering with SELECT.
   /// - Parameters:
@@ -36,13 +38,13 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     values: U,
     returning: PostgrestReturningOptions? = nil,
     count: CountOption? = nil
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "POST"
     var prefersHeaders: [String] = []
     if let returning = returning {
       prefersHeaders.append("return=\(returning.rawValue)")
     }
-    body = values
+    body = try client.encoder.encode(values)
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
@@ -80,7 +82,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil,
     ignoreDuplicates: Bool = false
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "POST"
     var prefersHeaders = [
       "resolution=\(ignoreDuplicates ? "ignore" : "merge")-duplicates",
@@ -89,7 +91,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     if let onConflict = onConflict {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
-    body = values
+    body = try client.encoder.encode(values)
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
@@ -112,10 +114,10 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     values: U,
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "PATCH"
     var preferHeaders = ["return=\(returning.rawValue)"]
-    body = values
+    body = try client.encoder.encode(values)
     if let count = count {
       preferHeaders.append("count=\(count.rawValue)")
     }

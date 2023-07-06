@@ -1,12 +1,13 @@
 import Foundation
-import Get
-import GetExtensions
 
 /// PostgREST client.
 public class PostgrestClient {
   let url: URL
   let schema: String?
-  let api: APIClient
+  let session: URLSession
+  var headers: [String: String]
+  let encoder: JSONEncoder
+  let decoder: JSONDecoder
 
   /// Creates a PostgREST client.
   /// - Parameters:
@@ -17,23 +18,28 @@ public class PostgrestClient {
   public init(
     url: URL,
     headers: [String: String] = [:],
-    schema: String?,
-    apiClientDelegate: APIClientDelegate? = nil
+    schema: String? = nil,
+    session: URLSession = .shared,
+    encoder: JSONEncoder = .postgrest,
+    decoder: JSONDecoder = .postgrest
   ) {
     self.url = url
     self.schema = schema
-    api = APIClient(baseURL: nil) {
-      var headers = headers
-      headers["X-Client-Info"] = "postgrest-swift/\(version)"
-      $0.sessionConfiguration.httpAdditionalHeaders = headers
-      $0.decoder = .postgrest
-      $0.encoder = .postgrest
-      if let customDelegate = apiClientDelegate {
-        $0.delegate = MultiAPIClientDelegate([customDelegate, PostgrestAPIClientDelegate()])
-      } else {
-        $0.delegate = PostgrestAPIClientDelegate()
-      }
+    self.session = session
+    self.encoder = encoder
+    self.decoder = decoder
+    self.headers = headers
+    self.headers["X-Client-Info"] = "postgrest-swift/\(version)"
+  }
+
+  @discardableResult
+  public func setAuth(_ token: String?) -> PostgrestClient {
+    if let token {
+      headers["Authorization"] = "Bearer \(token)"
+    } else {
+      headers.removeValue(forKey: "Authorization")
     }
+    return self
   }
 
   /// Perform a query on a table or a view.
@@ -41,8 +47,12 @@ public class PostgrestClient {
   public func from(_ table: String) -> PostgrestQueryBuilder {
     PostgrestQueryBuilder(
       client: self,
-      request: Request(url: url.appendingPathComponent(table)),
-      schema: schema
+      url: url.appendingPathComponent(table),
+      queryParams: [],
+      headers: headers,
+      schema: schema,
+      method: "GET",
+      body: nil
     )
   }
 
@@ -56,14 +66,15 @@ public class PostgrestClient {
     fn: String,
     params: U,
     count: CountOption? = nil
-  ) -> PostgrestTransformBuilder {
-    PostgrestRpcBuilder(
+  ) throws -> PostgrestTransformBuilder {
+    try PostgrestRpcBuilder(
       client: self,
-      request: Request(
-        url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
-        method: .post
-      ),
-      schema: schema
+      url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
+      queryParams: [],
+      headers: headers,
+      schema: schema,
+      method: "POST",
+      body: nil
     ).rpc(params: params, count: count)
   }
 
@@ -76,23 +87,8 @@ public class PostgrestClient {
   public func rpc(
     fn: String,
     count: CountOption? = nil
-  ) -> PostgrestTransformBuilder {
-    rpc(fn: fn, params: NoParams(), count: count)
-  }
-}
-
-struct PostgrestAPIClientDelegate: APIClientDelegate {
-  func client(
-    _ client: APIClient,
-    validateResponse response: HTTPURLResponse,
-    data: Data,
-    task _: URLSessionTask
-  ) throws {
-    if 200 ..< 300 ~= response.statusCode {
-      return
-    }
-
-    throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
+  ) throws -> PostgrestTransformBuilder {
+    try rpc(fn: fn, params: NoParams(), count: count)
   }
 
   func client<T>(_ client: APIClient, makeURLForRequest request: Request<T>) throws -> URL? {
@@ -156,7 +152,7 @@ private let supportedDateFormatters: [ISO8601DateFormatter] = [
 ]
 
 extension JSONDecoder {
-  static let postgrest = { () -> JSONDecoder in
+  public static let postgrest = { () -> JSONDecoder in
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .custom { decoder in
       let container = try decoder.singleValueContainer()
@@ -177,7 +173,7 @@ extension JSONDecoder {
 }
 
 extension JSONEncoder {
-  static let postgrest = { () -> JSONEncoder in
+  public static let postgrest = { () -> JSONEncoder in
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601
     return encoder

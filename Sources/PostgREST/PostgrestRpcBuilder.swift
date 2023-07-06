@@ -1,3 +1,5 @@
+import Foundation
+
 struct NoParams: Encodable {}
 
 public final class PostgrestRpcBuilder: PostgrestBuilder {
@@ -5,9 +7,10 @@ public final class PostgrestRpcBuilder: PostgrestBuilder {
   /// - Parameter params: The function params.
   func rpc<U: Encodable>(
     params: U,
+    encoder: JSONEncoder? = nil,
     head: Bool = false,
     count: CountOption? = nil
-  ) -> PostgrestTransformBuilder {
+  ) throws -> PostgrestTransformBuilder {
     // TODO: Support `HEAD` method
     // https://github.com/supabase/postgrest-js/blob/master/src/lib/PostgrestRpcBuilder.ts#L38
     assert(head == false, "HEAD is not currently supported yet.")
@@ -16,7 +19,7 @@ public final class PostgrestRpcBuilder: PostgrestBuilder {
     if params is NoParams {
       // noop
     } else {
-      body = params
+      body = try (encoder ?? .postgrest).encode(params)
     }
 
     if let count = count {

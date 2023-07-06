@@ -1,6 +1,6 @@
 curl \
 	--request POST \
-	--header "Accept: application/json" \
 	--header "Content-Type: application/json" \
-	--data "{\"email\":\"johndoe@supabase.io\"}" \
+	--header "X-Client-Info: postgrest-swift/1.0.0" \
+	--data "\"eyJlbWFpbCI6ImpvaG5kb2VAc3VwYWJhc2UuaW8ifQ==\"" \
 	"https://example.supabase.co/users"

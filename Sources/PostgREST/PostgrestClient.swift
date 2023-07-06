@@ -1,43 +1,69 @@
 import Foundation
 
 /// PostgREST client.
-public class PostgrestClient {
-  let url: URL
-  let schema: String?
-  let session: URLSession
-  var headers: [String: String]
-  let encoder: JSONEncoder
-  let decoder: JSONDecoder
+public final class PostgrestClient {
+  public struct Configuration {
+    public var url: URL
+    public var schema: String?
+    public var headers: [String: String]
+    public var session: URLSession
+    public var encoder: JSONEncoder
+    public var decoder: JSONDecoder
+
+    public init(
+      url: URL,
+      schema: String? = nil,
+      headers: [String: String] = [:],
+      session: URLSession = .shared,
+      encoder: JSONEncoder = .postgrest,
+      decoder: JSONDecoder = .postgrest
+    ) {
+      self.url = url
+      self.schema = schema
+      self.headers = headers
+      self.session = session
+      self.encoder = encoder
+      self.decoder = decoder
+    }
+  }
+
+  private let lock = NSLock()
+  public private(set) var configuration: Configuration
 
   /// Creates a PostgREST client.
-  /// - Parameters:
-  ///   - url: URL of the PostgREST endpoint.
-  ///   - headers: Custom headers.
-  ///   - schema: Postgres schema to switch to.
-  ///   - apiClientDelegate: Custom APIClientDelegate for the underlying APIClient.
-  public init(
+  public init(configuration: Configuration) {
+    var configuration = configuration
+    configuration.headers["X-Client-Info"] = "postgrest-swift/\(version)"
+    self.configuration = configuration
+  }
+
+  public convenience init(
     url: URL,
-    headers: [String: String] = [:],
     schema: String? = nil,
+    headers: [String: String] = [:],
     session: URLSession = .shared,
     encoder: JSONEncoder = .postgrest,
     decoder: JSONDecoder = .postgrest
   ) {
-    self.url = url
-    self.schema = schema
-    self.session = session
-    self.encoder = encoder
-    self.decoder = decoder
-    self.headers = headers
-    self.headers["X-Client-Info"] = "postgrest-swift/\(version)"
+    self.init(configuration: Configuration(
+      url: url,
+      schema: schema,
+      headers: headers,
+      session: session,
+      encoder: encoder,
+      decoder: decoder
+    ))
   }
 
   @discardableResult
   public func setAuth(_ token: String?) -> PostgrestClient {
+    lock.lock()
+    defer { lock.unlock() }
+
     if let token {
-      headers["Authorization"] = "Bearer \(token)"
+      configuration.headers["Authorization"] = "Bearer \(token)"
     } else {
-      headers.removeValue(forKey: "Authorization")
+      configuration.headers.removeValue(forKey: "Authorization")
     }
     return self
   }
@@ -45,12 +71,13 @@ public class PostgrestClient {
   /// Perform a query on a table or a view.
   /// - Parameter table: The table or view name to query.
   public func from(_ table: String) -> PostgrestQueryBuilder {
-    PostgrestQueryBuilder(
-      client: self,
-      url: url.appendingPathComponent(table),
+    lock.lock()
+    defer { lock.unlock() }
+    return PostgrestQueryBuilder(
+      configuration: configuration,
+      url: configuration.url.appendingPathComponent(table),
       queryParams: [],
-      headers: headers,
-      schema: schema,
+      headers: configuration.headers,
       method: "GET",
       body: nil
     )
@@ -67,12 +94,13 @@ public class PostgrestClient {
     params: U,
     count: CountOption? = nil
   ) throws -> PostgrestTransformBuilder {
-    try PostgrestRpcBuilder(
-      client: self,
-      url: url.appendingPathComponent("rpc").appendingPathComponent(fn),
+    lock.lock()
+    defer { lock.unlock() }
+    return try PostgrestRpcBuilder(
+      configuration: configuration,
+      url: configuration.url.appendingPathComponent("rpc").appendingPathComponent(fn),
       queryParams: [],
-      headers: headers,
-      schema: schema,
+      headers: configuration.headers,
       method: "POST",
       body: nil
     ).rpc(params: params, count: count)

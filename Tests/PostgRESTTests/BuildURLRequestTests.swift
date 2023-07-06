@@ -16,7 +16,7 @@
     struct TestCase {
       let name: String
       var record = false
-      let build: (PostgrestClient) throws -> PostgrestBuilder
+      let build: @Sendable (PostgrestClient) throws -> PostgrestBuilder
     }
 
     func testBuildRequest() async throws {
@@ -110,7 +110,7 @@
 
     func testSessionConfiguration() {
       let client = PostgrestClient(url: url, schema: nil)
-      let clientInfoHeader = client.headers["X-Client-Info"]
+      let clientInfoHeader = client.configuration.headers["X-Client-Info"]
       XCTAssertNotNil(clientInfoHeader)
     }
   }

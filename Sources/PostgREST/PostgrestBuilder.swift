@@ -5,41 +5,37 @@ import Foundation
 #endif
 
 public class PostgrestBuilder {
-  let client: PostgrestClient
+  let configuration: PostgrestClient.Configuration
   let url: URL
   var queryParams: [(name: String, value: String?)]
   var headers: [String: String]
-  let schema: String?
   var method: String
   var body: Data?
 
   var fetchOptions = FetchOptions()
 
   init(
-    client: PostgrestClient,
+    configuration: PostgrestClient.Configuration,
     url: URL,
     queryParams: [(name: String, value: String?)],
     headers: [String: String],
-    schema: String?,
     method: String,
     body: Data?
   ) {
-    self.client = client
+    self.configuration = configuration
     self.url = url
     self.queryParams = queryParams
     self.headers = headers
-    self.schema = schema
     self.method = method
     self.body = body
   }
 
   convenience init(_ other: PostgrestBuilder) {
     self.init(
-      client: other.client,
+      configuration: other.configuration,
       url: other.url,
       queryParams: other.queryParams,
       headers: other.headers,
-      schema: other.schema,
       method: other.method,
       body: other.body
     )
@@ -60,8 +56,8 @@ public class PostgrestBuilder {
     count: CountOption? = nil
   ) async throws -> PostgrestResponse<T> {
     fetchOptions = FetchOptions(head: head, count: count)
-    return try await execute { [decoder = client.decoder] data in
-      try decoder.decode(T.self, from: data)
+    return try await execute { [configuration] data in
+      try configuration.decoder.decode(T.self, from: data)
     }
   }
 
@@ -84,7 +80,7 @@ public class PostgrestBuilder {
 
     headers["Content-Type"] = "application/json"
 
-    if let schema = schema {
+    if let schema = configuration.schema {
       if method == "GET" || method == "HEAD" {
         headers["Accept-Profile"] = schema
       } else {
@@ -94,13 +90,13 @@ public class PostgrestBuilder {
 
     let urlRequest = try makeURLRequest()
 
-    let (data, response) = try await client.session.data(for: urlRequest)
+    let (data, response) = try await configuration.session.data(for: urlRequest)
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
     }
 
     guard 200 ..< 300 ~= httpResponse.statusCode else {
-      let error = try client.decoder.decode(PostgrestError.self, from: data)
+      let error = try configuration.decoder.decode(PostgrestError.self, from: data)
       throw error
     }
 
@@ -130,7 +126,7 @@ public class PostgrestBuilder {
     urlRequest.httpMethod = method
 
     if let body {
-      urlRequest.httpBody = try client.encoder.encode(body)
+      urlRequest.httpBody = try configuration.encoder.encode(body)
     }
 
     return urlRequest

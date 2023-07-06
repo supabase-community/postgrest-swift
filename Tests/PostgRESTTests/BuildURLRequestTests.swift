@@ -23,24 +23,24 @@
       var runningTestCase: TestCase?
 
       let client = PostgrestClient(url: url, schema: nil)
-//      { request in
-//        struct SomeError: Error {}
-//
-//        guard let runningTestCase else {
-//          XCTFail("Fetch called without a runningTestCase set.")
-//          throw SomeError()
-//        }
-//
-//        assertSnapshot(
-//          matching: request,
-//          as: .curl,
-//          named: runningTestCase.name,
-//          record: runningTestCase.record,
-//          testName: "testBuildRequest()"
-//        )
-//
-//        throw SomeError()
-//      }
+      //      { request in
+      //        struct SomeError: Error {}
+      //
+      //        guard let runningTestCase else {
+      //          XCTFail("Fetch called without a runningTestCase set.")
+      //          throw SomeError()
+      //        }
+      //
+      //        assertSnapshot(
+      //          matching: request,
+      //          as: .curl,
+      //          named: runningTestCase.name,
+      //          record: runningTestCase.record,
+      //          testName: "testBuildRequest()"
+      //        )
+      //
+      //        throw SomeError()
+      //      }
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
@@ -103,7 +103,7 @@
       for testCase in testCases {
         runningTestCase = testCase
         let builder = try testCase.build(client)
-//        builder.adaptRequest(head: false, count: nil)
+        //        builder.adaptRequest(head: false, count: nil)
         _ = try? await builder.execute()
       }
     }

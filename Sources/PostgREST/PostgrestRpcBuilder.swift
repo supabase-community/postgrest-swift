@@ -3,11 +3,15 @@ import Foundation
 struct NoParams: Encodable {}
 
 public final class PostgrestRpcBuilder: PostgrestBuilder {
-  /// Perform a function call with params.
-  /// - Parameter params: The function params.
+  /// Performs a function call with parameters.
+  /// - Parameters:
+  ///   - params: The parameters to pass to the function.
+  ///   - head: When set to `true`, the function call will use the `HEAD` method. Default is `false`.
+  ///   - count: Count algorithm to use to count rows in a table. Default is `nil`.
+  /// - Returns: The `PostgrestTransformBuilder` instance for method chaining.
+  /// - Throws: An error if the function call fails.
   func rpc<U: Encodable>(
     params: U,
-    encoder: JSONEncoder? = nil,
     head: Bool = false,
     count: CountOption? = nil
   ) throws -> PostgrestTransformBuilder {
@@ -19,7 +23,7 @@ public final class PostgrestRpcBuilder: PostgrestBuilder {
     if params is NoParams {
       // noop
     } else {
-      body = try (encoder ?? .postgrest).encode(params)
+      body = try configuration.encoder.encode(params)
     }
 
     if let count = count {

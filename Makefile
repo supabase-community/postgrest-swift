@@ -13,7 +13,7 @@ test-library:
 
 .PHONY: format
 format:
-	swiftformat .
+	swift format -i -r ./Sources ./Tests ./Package.swift
 
 .PHONY: supabase-up
 supabase-up: supabase-down

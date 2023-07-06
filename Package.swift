@@ -16,10 +16,10 @@ let package = Package(
     .library(
       name: "PostgREST",
       targets: ["PostgREST"]
-    ),
+    )
   ],
   dependencies: [
-    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.8.1"),
+    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.8.1")
   ],
   targets: [
     .target(
@@ -37,7 +37,7 @@ let package = Package(
         ),
       ],
       exclude: [
-        "__Snapshots__",
+        "__Snapshots__"
       ]
     ),
     .testTarget(name: "PostgRESTIntegrationTests", dependencies: ["PostgREST"]),

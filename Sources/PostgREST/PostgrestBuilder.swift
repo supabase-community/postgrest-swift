@@ -4,14 +4,22 @@ import Foundation
   import FoundationNetworking
 #endif
 
+/// The builder class for creating and executing requests to a PostgREST server.
 public class PostgrestBuilder {
+  /// The configuration for the PostgREST client.
   let configuration: PostgrestClient.Configuration
+  /// The URL for the request.
   let url: URL
+  /// The query parameters for the request.
   var queryParams: [(name: String, value: String?)]
+  /// The headers for the request.
   var headers: [String: String]
+  /// The HTTP method for the request.
   var method: String
+  /// The body data for the request.
   var body: Data?
 
+  /// The options for fetching data from the PostgREST server.
   var fetchOptions = FetchOptions()
 
   init(
@@ -41,6 +49,11 @@ public class PostgrestBuilder {
     )
   }
 
+  /// Executes the request and returns a response of type Void.
+  /// - Parameters:
+  ///   - head: Determines whether to only retrieve the response headers.
+  ///   - count: The count option for the request.
+  /// - Returns: A `PostgrestResponse<Void>` instance representing the response.
   @discardableResult
   public func execute(
     head: Bool = false,
@@ -50,6 +63,11 @@ public class PostgrestBuilder {
     return try await execute { _ in () }
   }
 
+  /// Executes the request and returns a response of the specified type.
+  /// - Parameters:
+  ///   - head: Determines whether to only retrieve the response headers.
+  ///   - count: The count option for the request.
+  /// - Returns: A `PostgrestResponse<T>` instance representing the response.
   @discardableResult
   public func execute<T: Decodable>(
     head: Bool = false,
@@ -95,7 +113,7 @@ public class PostgrestBuilder {
       throw URLError(.badServerResponse)
     }
 
-    guard 200 ..< 300 ~= httpResponse.statusCode else {
+    guard 200..<300 ~= httpResponse.statusCode else {
       let error = try configuration.decoder.decode(PostgrestError.self, from: data)
       throw error
     }

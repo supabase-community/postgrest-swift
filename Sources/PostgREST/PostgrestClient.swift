@@ -2,6 +2,8 @@ import Foundation
 
 /// PostgREST client.
 public final class PostgrestClient {
+
+  /// The configuration struct for the PostgREST client.
   public struct Configuration {
     public var url: URL
     public var schema: String?
@@ -10,6 +12,14 @@ public final class PostgrestClient {
     public var encoder: JSONEncoder
     public var decoder: JSONDecoder
 
+    /// Initializes a new configuration for the PostgREST client.
+    /// - Parameters:
+    ///   - url: The URL of the PostgREST server.
+    ///   - schema: The schema to use.
+    ///   - headers: The headers to include in requests.
+    ///   - session: The URLSession to use for requests.
+    ///   - encoder: The JSONEncoder to use for encoding.
+    ///   - decoder: The JSONDecoder to use for decoding.
     public init(
       url: URL,
       schema: String? = nil,
@@ -30,13 +40,22 @@ public final class PostgrestClient {
   private let lock = NSLock()
   public private(set) var configuration: Configuration
 
-  /// Creates a PostgREST client.
+  /// Creates a PostgREST client with the specified configuration.
+  /// - Parameter configuration: The configuration for the client.
   public init(configuration: Configuration) {
     var configuration = configuration
     configuration.headers["X-Client-Info"] = "postgrest-swift/\(version)"
     self.configuration = configuration
   }
 
+  /// Creates a PostgREST client with the specified parameters.
+  /// - Parameters:
+  ///   - url: The URL of the PostgREST server.
+  ///   - schema: The schema to use.
+  ///   - headers: The headers to include in requests.
+  ///   - session: The URLSession to use for requests.
+  ///   - encoder: The JSONEncoder to use for encoding.
+  ///   - decoder: The JSONDecoder to use for decoding.
   public convenience init(
     url: URL,
     schema: String? = nil,
@@ -45,16 +64,21 @@ public final class PostgrestClient {
     encoder: JSONEncoder = .postgrest,
     decoder: JSONDecoder = .postgrest
   ) {
-    self.init(configuration: Configuration(
-      url: url,
-      schema: schema,
-      headers: headers,
-      session: session,
-      encoder: encoder,
-      decoder: decoder
-    ))
+    self.init(
+      configuration: Configuration(
+        url: url,
+        schema: schema,
+        headers: headers,
+        session: session,
+        encoder: encoder,
+        decoder: decoder
+      )
+    )
   }
 
+  /// Sets the authorization token for the client.
+  /// - Parameter token: The authorization token.
+  /// - Returns: The PostgrestClient instance.
   @discardableResult
   public func setAuth(_ token: String?) -> PostgrestClient {
     lock.lock()
@@ -68,8 +92,9 @@ public final class PostgrestClient {
     return self
   }
 
-  /// Perform a query on a table or a view.
+  /// Performs a query on a table or a view.
   /// - Parameter table: The table or view name to query.
+  /// - Returns: A PostgrestQueryBuilder instance.
   public func from(_ table: String) -> PostgrestQueryBuilder {
     lock.lock()
     defer { lock.unlock() }
@@ -83,12 +108,14 @@ public final class PostgrestClient {
     )
   }
 
-  /// Perform a function call.
+  /// Performs a function call.
   /// - Parameters:
   ///   - fn: The function name to call.
   ///   - params: The parameters to pass to the function call.
-  ///   - count:  Count algorithm to use to count rows returned by the function. Only applicable for
-  /// [set-returning functions](https://www.postgresql.org/docs/current/functions-srf.html).
+  ///   - count: Count algorithm to use to count rows returned by the function.
+  ///             Only applicable for set-returning functions.
+  /// - Returns: A PostgrestTransformBuilder instance.
+  /// - Throws: An error if the function call fails.
   public func rpc<U: Encodable>(
     fn: String,
     params: U,
@@ -106,12 +133,13 @@ public final class PostgrestClient {
     ).rpc(params: params, count: count)
   }
 
-  /// Perform a function call.
+  /// Performs a function call.
   /// - Parameters:
   ///   - fn: The function name to call.
-  ///   - params: The parameters to pass to the function call.
-  ///   - count:  Count algorithm to use to count rows returned by the function. Only applicable for
-  /// [set-returning functions](https://www.postgresql.org/docs/current/functions-srf.html).
+  ///   - count: Count algorithm to use to count rows returned by the function.
+  ///            Only applicable for set-returning functions.
+  /// - Returns: A PostgrestTransformBuilder instance.
+  /// - Throws: An error if the function call fails.
   public func rpc(
     fn: String,
     count: CountOption? = nil
@@ -180,6 +208,7 @@ private let supportedDateFormatters: [ISO8601DateFormatter] = [
 ]
 
 extension JSONDecoder {
+  /// The JSONDecoder instance for PostgREST responses.
   public static let postgrest = { () -> JSONDecoder in
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .custom { decoder in
@@ -201,6 +230,7 @@ extension JSONDecoder {
 }
 
 extension JSONEncoder {
+  /// The JSONEncoder instance for PostgREST requests.
   public static let postgrest = { () -> JSONEncoder in
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601

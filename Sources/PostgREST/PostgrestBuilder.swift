@@ -144,7 +144,7 @@ public class PostgrestBuilder {
     urlRequest.httpMethod = method
 
     if let body {
-      urlRequest.httpBody = try configuration.encoder.encode(body)
+      urlRequest.httpBody = body
     }
 
     return urlRequest

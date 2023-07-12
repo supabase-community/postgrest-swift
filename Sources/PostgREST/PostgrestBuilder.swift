@@ -51,29 +51,25 @@ public class PostgrestBuilder {
 
   /// Executes the request and returns a response of type Void.
   /// - Parameters:
-  ///   - head: Determines whether to only retrieve the response headers.
-  ///   - count: The count option for the request.
+  ///   - options: Options for querying Supabase.
   /// - Returns: A `PostgrestResponse<Void>` instance representing the response.
   @discardableResult
   public func execute(
-    head: Bool = false,
-    count: CountOption? = nil
+    options: FetchOptions = FetchOptions()
   ) async throws -> PostgrestResponse<Void> {
-    fetchOptions = FetchOptions(head: head, count: count)
+    self.fetchOptions = options
     return try await execute { _ in () }
   }
 
   /// Executes the request and returns a response of the specified type.
   /// - Parameters:
-  ///   - head: Determines whether to only retrieve the response headers.
-  ///   - count: The count option for the request.
+  ///   - options: Options for querying Supabase.
   /// - Returns: A `PostgrestResponse<T>` instance representing the response.
   @discardableResult
   public func execute<T: Decodable>(
-    head: Bool = false,
-    count: CountOption? = nil
+    options: FetchOptions = FetchOptions()
   ) async throws -> PostgrestResponse<T> {
-    fetchOptions = FetchOptions(head: head, count: count)
+    self.fetchOptions = options
     return try await execute { [configuration] data in
       try configuration.decoder.decode(T.self, from: data)
     }

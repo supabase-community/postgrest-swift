@@ -104,7 +104,7 @@ public class PostgrestBuilder {
 
     let urlRequest = try makeURLRequest()
 
-    let (data, response) = try await configuration.session.data(for: urlRequest)
+    let (data, response) = try await configuration.fetch(urlRequest)
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
     }

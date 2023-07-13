@@ -1,14 +1,17 @@
 import Foundation
 
 /// PostgREST client.
-public final class PostgrestClient {
+public actor PostgrestClient {
+  public typealias FetchHandler = @Sendable (_ request: URLRequest) async throws -> (
+    Data, URLResponse
+  )
 
   /// The configuration struct for the PostgREST client.
   public struct Configuration {
     public var url: URL
     public var schema: String?
     public var headers: [String: String]
-    public var session: URLSession
+    public var fetch: FetchHandler
     public var encoder: JSONEncoder
     public var decoder: JSONDecoder
 
@@ -17,27 +20,26 @@ public final class PostgrestClient {
     ///   - url: The URL of the PostgREST server.
     ///   - schema: The schema to use.
     ///   - headers: The headers to include in requests.
-    ///   - session: The URLSession to use for requests.
+    ///   - fetch: The fetch handler to use for requests.
     ///   - encoder: The JSONEncoder to use for encoding.
     ///   - decoder: The JSONDecoder to use for decoding.
     public init(
       url: URL,
       schema: String? = nil,
       headers: [String: String] = [:],
-      session: URLSession = .shared,
+      fetch: @escaping FetchHandler = { try await URLSession.shared.data(for: $0) },
       encoder: JSONEncoder = .postgrest,
       decoder: JSONDecoder = .postgrest
     ) {
       self.url = url
       self.schema = schema
       self.headers = headers
-      self.session = session
+      self.fetch = fetch
       self.encoder = encoder
       self.decoder = decoder
     }
   }
 
-  private let lock = NSLock()
   public private(set) var configuration: Configuration
 
   /// Creates a PostgREST client with the specified configuration.
@@ -56,11 +58,11 @@ public final class PostgrestClient {
   ///   - session: The URLSession to use for requests.
   ///   - encoder: The JSONEncoder to use for encoding.
   ///   - decoder: The JSONDecoder to use for decoding.
-  public convenience init(
+  public init(
     url: URL,
     schema: String? = nil,
     headers: [String: String] = [:],
-    session: URLSession = .shared,
+    fetch: @escaping FetchHandler = { try await URLSession.shared.data(for: $0) },
     encoder: JSONEncoder = .postgrest,
     decoder: JSONDecoder = .postgrest
   ) {
@@ -69,7 +71,7 @@ public final class PostgrestClient {
         url: url,
         schema: schema,
         headers: headers,
-        session: session,
+        fetch: fetch,
         encoder: encoder,
         decoder: decoder
       )
@@ -81,9 +83,6 @@ public final class PostgrestClient {
   /// - Returns: The PostgrestClient instance.
   @discardableResult
   public func setAuth(_ token: String?) -> PostgrestClient {
-    lock.lock()
-    defer { lock.unlock() }
-
     if let token {
       configuration.headers["Authorization"] = "Bearer \(token)"
     } else {
@@ -96,9 +95,7 @@ public final class PostgrestClient {
   /// - Parameter table: The table or view name to query.
   /// - Returns: A PostgrestQueryBuilder instance.
   public func from(_ table: String) -> PostgrestQueryBuilder {
-    lock.lock()
-    defer { lock.unlock() }
-    return PostgrestQueryBuilder(
+    PostgrestQueryBuilder(
       configuration: configuration,
       url: configuration.url.appendingPathComponent(table),
       queryParams: [],
@@ -121,9 +118,7 @@ public final class PostgrestClient {
     params: U,
     count: CountOption? = nil
   ) throws -> PostgrestTransformBuilder {
-    lock.lock()
-    defer { lock.unlock() }
-    return try PostgrestRpcBuilder(
+    try PostgrestRpcBuilder(
       configuration: configuration,
       url: configuration.url.appendingPathComponent("rpc").appendingPathComponent(fn),
       queryParams: [],

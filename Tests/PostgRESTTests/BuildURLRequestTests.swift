@@ -13,26 +13,24 @@
   final class BuildURLRequestTests: XCTestCase {
     let url = URL(string: "https://example.supabase.co")!
 
-    struct TestCase {
+    struct TestCase: Sendable {
       let name: String
       var record = false
-      let build: @Sendable (PostgrestClient) throws -> PostgrestBuilder
+      let build: @Sendable (PostgrestClient) async throws -> PostgrestBuilder
     }
 
     func testBuildRequest() async throws {
-      class SessionDelegate: NSObject, URLSessionDataDelegate {
-        var runningTestCase: TestCase?
+      let runningTestCase = LockIsolated(Optional<TestCase>.none)
 
-        func urlSession(_ session: URLSession, didCreateTask task: URLSessionTask) {
-          guard
-            let request = task.originalRequest,
-            let runningTestCase = runningTestCase
-          else {
-            XCTFail("execute called without a runningTestCase set.")
-            return
-          }
+      let client = PostgrestClient(
+        url: url, schema: nil,
+        fetch: { @MainActor request in
+          runningTestCase.withValue { runningTestCase in
+            guard let runningTestCase = runningTestCase else {
+              XCTFail("execute called without a runningTestCase set.")
+              return (Data(), URLResponse())
+            }
 
-          DispatchQueue.main.sync {
             assertSnapshot(
               matching: request,
               as: .curl,
@@ -40,33 +38,29 @@
               record: runningTestCase.record,
               testName: "testBuildRequest()"
             )
+
+            return (Data(), URLResponse())
           }
-        }
-      }
-
-      let delegate = SessionDelegate()
-      let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: .main)
-
-      let client = PostgrestClient(url: url, schema: nil, session: session)
+        })
 
       let testCases: [TestCase] = [
         TestCase(name: "select all users where email ends with '@supabase.co'") { client in
-          client.from("users")
+          await client.from("users")
             .select()
             .like(column: "email", value: "%@supabase.co")
         },
         TestCase(name: "insert new user") { client in
-          try client.from("users")
+          try await client.from("users")
             .insert(values: ["email": "johndoe@supabase.io"])
         },
         TestCase(name: "call rpc") { client in
-          try client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
+          try await client.rpc(fn: "test_fcn", params: ["KEY": "VALUE"])
         },
         TestCase(name: "call rpc without parameter") { client in
-          try client.rpc(fn: "test_fcn")
+          try await client.rpc(fn: "test_fcn")
         },
         TestCase(name: "test all filters and count") { client in
-          var query = client.from("todos").select()
+          var query = await client.from("todos").select()
 
           for op in PostgrestFilterBuilder.Operator.allCases {
             query = query.filter(column: "column", operator: op, value: "Some value")
@@ -75,14 +69,14 @@
           return query
         },
         TestCase(name: "test in filter") { client in
-          client.from("todos").select().in(column: "id", value: [1, 2, 3])
+          await client.from("todos").select().in(column: "id", value: [1, 2, 3])
         },
         TestCase(name: "test contains filter with dictionary") { client in
-          client.from("users").select(columns: "name")
+          await client.from("users").select(columns: "name")
             .contains(column: "address", value: ["postcode": 90210])
         },
         TestCase(name: "test contains filter with array") { client in
-          client.from("users")
+          await client.from("users")
             .select()
             .contains(column: "name", value: ["is:online", "faction:red"])
         },
@@ -108,16 +102,32 @@
       ]
 
       for testCase in testCases {
-        delegate.runningTestCase = testCase
-        let builder = try testCase.build(client)
+        runningTestCase.withValue { $0 = testCase }
+        let builder = try await testCase.build(client)
         _ = try? await builder.execute()
       }
     }
 
-    func testSessionConfiguration() {
+    func testSessionConfiguration() async {
       let client = PostgrestClient(url: url, schema: nil)
-      let clientInfoHeader = client.configuration.headers["X-Client-Info"]
+      let clientInfoHeader = await client.configuration.headers["X-Client-Info"]
       XCTAssertNotNil(clientInfoHeader)
     }
   }
 #endif
+
+final class LockIsolated<Value>: @unchecked Sendable {
+  private let lock = NSLock()
+  private var value: Value
+
+  init(_ value: Value) {
+    self.value = value
+  }
+
+  @discardableResult
+  func withValue<T>(_ block: (inout Value) -> T) -> T {
+    lock.lock()
+    defer { lock.unlock() }
+    return block(&value)
+  }
+}

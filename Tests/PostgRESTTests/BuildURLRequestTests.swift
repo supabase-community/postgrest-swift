@@ -78,6 +78,14 @@
             .select()
             .contains(column: "name", value: ["is:online", "faction:red"])
         },
+        TestCase(name: "test upsert not ignoring duplicates") { client in
+          client.from("users")
+            .upsert(values: ["email": "johndoe@supabase.io"])
+        },
+        TestCase(name: "test upsert ignoring duplicates") { client in
+          client.from("users")
+            .upsert(values: ["email": "johndoe@supabase.io"], ignoreDuplicates: true)
+        },
       ]
 
       for testCase in testCases {

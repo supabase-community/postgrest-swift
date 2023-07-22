@@ -5,12 +5,14 @@ struct Todo: Codable, Hashable {
   let id: UUID
   var description: String
   var isComplete: Bool
+  var tags: [String]
   let createdAt: Date
 
   enum CodingKeys: String, CodingKey {
     case id
     case description
     case isComplete = "is_complete"
+    case tags
     case createdAt = "created_at"
   }
 }
@@ -18,10 +20,12 @@ struct Todo: Codable, Hashable {
 struct NewTodo: Codable, Hashable {
   var description: String
   var isComplete: Bool = false
+  var tags: [String]
 
   enum CodingKeys: String, CodingKey {
     case description
     case isComplete = "is_complete"
+    case tags
   }
 }
 
@@ -44,8 +48,9 @@ final class IntegrationTests: XCTestCase {
       "INTEGRATION_TESTS not defined."
     )
 
-    // Run fresh test by deleting all todos.
-    try await client.from("todo").delete().execute()
+    // Run fresh test by deleting all todos. Delete without a where clause isn't supported, so have
+    // to do this `neq` trick to delete all data.
+    try await client.from("todo").delete().neq(column: "id", value: UUID().uuidString).execute()
   }
 
   func testIntegration() async throws {
@@ -54,7 +59,10 @@ final class IntegrationTests: XCTestCase {
 
     let insertedTodo: Todo = try await client.from("todo")
       .insert(
-        values: NewTodo(description: "Implement integration tests for postgrest-swift"),
+        values: NewTodo(
+          description: "Implement integration tests for postgrest-swift",
+          tags: ["tag 01", "tag 02"]
+        ),
         returning: .representation
       )
       .single()
@@ -67,8 +75,8 @@ final class IntegrationTests: XCTestCase {
     let insertedTodos: [Todo] = try await client.from("todo")
       .insert(
         values: [
-          NewTodo(description: "Make supabase swift libraries production ready"),
-          NewTodo(description: "Drink some coffee"),
+          NewTodo(description: "Make supabase swift libraries production ready", tags: ["tag 01"]),
+          NewTodo(description: "Drink some coffee", tags: ["tag 02"]),
         ],
         returning: .representation
       )
@@ -97,5 +105,9 @@ final class IntegrationTests: XCTestCase {
     try await client.from("todo").delete().eq(column: "is_complete", value: true).execute()
     todos = try await client.from("todo").select().execute().value
     XCTAssertTrue(completedTodos.allSatisfy { todo in !todos.contains(todo) })
+
+    let todosWithSpecificTag: [Todo] = try await client.from("todo").select()
+      .contains(column: "tags", value: ["tag 01"]).execute().value
+    XCTAssertEqual(todosWithSpecificTag, [insertedTodo, insertedTodos[0]])
   }
 }

@@ -94,6 +94,52 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
 
     throw try client.configuration.decoder.decode(PostgrestError.self, from: data)
   }
+
+  func client<T>(_ client: APIClient, makeURLForRequest request: Request<T>) throws -> URL? {
+    func makeURL() -> URL? {
+      guard let url = request.url else {
+        return nil
+      }
+
+      return url.scheme == nil ? client.configuration.baseURL?
+        .appendingPathComponent(url.absoluteString) : url
+    }
+
+    guard let url = makeURL(), var components = URLComponents(
+      url: url,
+      resolvingAgainstBaseURL: false
+    ) else {
+      throw URLError(.badURL)
+    }
+    if let query = request.query, !query.isEmpty {
+      let percentEncodedQuery = (components.percentEncodedQuery.map { $0 + "&" } ?? "") + self
+        .query(query)
+      components.percentEncodedQuery = percentEncodedQuery
+    }
+    guard let url = components.url else {
+      throw URLError(.badURL)
+    }
+    return url
+  }
+
+  private func escape(_ string: String) -> String {
+    string.addingPercentEncoding(withAllowedCharacters: .postgrestURLQueryAllowed) ?? string
+  }
+
+  private func query(_ parameters: [(String, String?)]) -> String {
+    parameters.compactMap { key, value in
+      if let value {
+        return (key, value)
+      }
+      return nil
+    }
+    .map { key, value in
+      let escapedKey = escape(key)
+      let escapedValue = escape(value)
+      return "\(escapedKey)=\(escapedValue)"
+    }
+    .joined(separator: "&")
+  }
 }
 
 private let supportedDateFormatters: [ISO8601DateFormatter] = [
@@ -135,5 +181,29 @@ extension JSONEncoder {
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601
     return encoder
+  }()
+}
+
+extension CharacterSet {
+  /// Creates a CharacterSet from RFC 3986 allowed characters.
+  ///
+  /// RFC 3986 states that the following characters are "reserved" characters.
+  ///
+  /// - General Delimiters: ":", "#", "[", "]", "@", "?", "/"
+  /// - Sub-Delimiters: "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "="
+  ///
+  /// In RFC 3986 - Section 3.4, it states that the "?" and "/" characters should not be escaped to
+  /// allow
+  /// query strings to include a URL. Therefore, all "reserved" characters with the exception of "?"
+  /// and "/"
+  /// should be percent-escaped in the query string.
+  static let postgrestURLQueryAllowed: CharacterSet = {
+    let generalDelimitersToEncode =
+      ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
+    let subDelimitersToEncode = "!$&'()*+,;="
+    let encodableDelimiters =
+      CharacterSet(charactersIn: "\(generalDelimitersToEncode)\(subDelimitersToEncode)")
+
+    return CharacterSet.urlQueryAllowed.subtracting(encodableDelimiters)
   }()
 }

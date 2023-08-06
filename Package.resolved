@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/kean/Get",
         "state": {
           "branch": null,
-          "revision": "7209fdb015686fd90918b2037cb2039206405bd3",
-          "version": "2.1.5"
+          "revision": "12830cc64f31789ae6f4352d2d51d03a25fc3741",
+          "version": "2.1.6"
         }
       },
       {
@@ -21,11 +21,11 @@
       },
       {
         "package": "swift-snapshot-testing",
-        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
+        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
         "state": {
           "branch": null,
-          "revision": "f29e2014f6230cf7d5138fc899da51c7f513d467",
-          "version": "1.10.0"
+          "revision": "dc46eeb3928a75390651fac6c1ef7f93ad59a73b",
+          "version": "1.11.1"
         }
       }
     ]

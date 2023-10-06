@@ -91,6 +91,12 @@
             .select()
             .eq(column: "id", value: "Cigányka-ér (0+400 cskm) vízrajzi állomás")
         },
+        TestCase(name: "query with timestampz") { client in
+          client.from("tasks")
+            .select()
+            .gt(column: "received_at", value: "2023-03-23T15:50:30.511743+00:00")
+            .order(column: "received_at")
+        }
       ]
 
       for testCase in testCases {

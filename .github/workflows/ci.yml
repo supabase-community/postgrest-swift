@@ -14,8 +14,10 @@ concurrency:
 
 jobs:
   library:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
+      - name: Select Xcode 14.3
+        run: sudo xcode-select -s /Applications/Xcode_14.3.app
       - name: Run tests
         run: make test-library

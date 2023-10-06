@@ -14,19 +14,10 @@ concurrency:
 
 jobs:
   library:
-    runs-on: macos-12
-    strategy:
-      matrix:
-        xcode: ["14.1"]
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - uses: actions/cache@v3
-        with:
-          path: .deriveddata
-          key: ${{ runner.os }}-spm-Xcode-${{ matrix.xcode }}-${{ hashFiles('**/Package.swift') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-Xcode-${{ matrix.xcode }}-
+      - name: Select Xcode 14.3
+        run: sudo xcode-select -s /Applications/Xcode_14.3.app
       - name: Run tests
         run: make test-library

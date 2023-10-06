@@ -86,6 +86,11 @@
           client.from("users")
             .upsert(values: ["email": "johndoe@supabase.io"], ignoreDuplicates: true)
         },
+        TestCase(name: "query with + character") { client in
+          client.from("users")
+            .select()
+            .eq(column: "id", value: "Cigányka-ér (0+400 cskm) vízrajzi állomás")
+        },
       ]
 
       for testCase in testCases {

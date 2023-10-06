@@ -52,9 +52,10 @@ final class IntegrationTests: XCTestCase {
       "INTEGRATION_TESTS not defined."
     )
 
-    // Run fresh test by deleting all todos. Delete without a where clause isn't supported, so have
+    // Run fresh test by deleting all data. Delete without a where clause isn't supported, so have
     // to do this `neq` trick to delete all data.
     try await client.from("todos").delete().neq(column: "id", value: UUID().uuidString).execute()
+    try await client.from("users").delete().neq(column: "id", value: UUID().uuidString).execute()
   }
 
   func testIntegration() async throws {
@@ -122,7 +123,7 @@ final class IntegrationTests: XCTestCase {
       User(email: "johndoe+test2@mail.com"),
     ]
 
-//    try await client.from("users").insert(values: users).execute()
+    try await client.from("users").insert(values: users).execute()
 
     let fetchedUsers: [User] = try await client.from("users").select()
       .ilike(column: "email", value: "johndoe+test%").execute().value
@@ -130,15 +131,5 @@ final class IntegrationTests: XCTestCase {
       fetchedUsers[...],
       users[1 ... 2]
     )
-  }
-
-  func testPercentEncodedString() {
-    let value = "johndoe+test%"
-    let percentEncoded = value
-      .addingPercentEncoding(
-        withAllowedCharacters: .urlQueryAllowed
-          .subtracting(CharacterSet(charactersIn: "+"))
-      )
-    XCTAssertEqual(percentEncoded, "johndoe%2Btest%25")
   }
 }

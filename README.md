@@ -11,7 +11,7 @@ Swift client for [PostgREST](https://postgrest.org). The goal of this library is
 Add `postgrest-swift` as a dependency to your `Package.swift` file. For more information, please see the [Swift Package Manager documentation](https://github.com/apple/swift-package-manager/tree/master/Documentation).
 
 ```swift
-.package(url: "https://github.com/supabase/postgrest-swift", .exact("0.0.4"))
+.package(url: "https://github.com/supabase/postgrest-swift", from: "1.0.2")
 ```
 
 ### Supabase

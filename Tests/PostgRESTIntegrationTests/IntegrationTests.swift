@@ -128,7 +128,7 @@ final class IntegrationTests: XCTestCase {
       .ilike(column: "email", value: "johndoe+test%").execute().value
     XCTAssertEqual(
       fetchedUsers[...],
-      users[1 ... 2]
+      users[1...2]
     )
   }
 }

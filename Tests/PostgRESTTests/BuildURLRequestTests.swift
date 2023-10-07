@@ -89,16 +89,16 @@
             .upsert(values: ["email": "johndoe@supabase.io"], ignoreDuplicates: true)
         },
         TestCase(name: "query with + character") { client in
-          client.from("users")
+          await client.from("users")
             .select()
             .eq(column: "id", value: "Cigányka-ér (0+400 cskm) vízrajzi állomás")
         },
         TestCase(name: "query with timestampz") { client in
-          client.from("tasks")
+          await client.from("tasks")
             .select()
             .gt(column: "received_at", value: "2023-03-23T15:50:30.511743+00:00")
             .order(column: "received_at")
-        }
+        },
       ]
 
       for testCase in testCases {
@@ -112,37 +112,6 @@
       let client = PostgrestClient(url: url, schema: nil)
       let clientInfoHeader = await client.configuration.headers["X-Client-Info"]
       XCTAssertNotNil(clientInfoHeader)
-    }
-  }
-
-  final class LockIsolated<Value>: @unchecked Sendable {
-    private let lock = NSRecursiveLock()
-    private var _value: Value
-
-    init(_ value: Value) {
-      self._value = value
-    }
-
-    @discardableResult
-    func withValue<T>(_ block: (inout Value) throws -> T) rethrows -> T {
-      try lock.sync {
-        var value = self._value
-        defer { self._value = value }
-        return try block(&value)
-      }
-    }
-
-    var value: Value {
-      lock.sync { self._value }
-    }
-  }
-
-  extension NSRecursiveLock {
-    @discardableResult
-    func sync<R>(work: () throws -> R) rethrows -> R {
-      lock()
-      defer { unlock() }
-      return try work()
     }
   }
 

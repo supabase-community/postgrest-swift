@@ -1,9 +1,12 @@
+import Foundation
+
 public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs a vertical filtering with SELECT.
   /// - Parameters:
   ///   - columns: The columns to retrieve, separated by commas.
   ///   - head: When set to true, select will void data.
   ///   - count: Count algorithm to use to count rows in a table.
+  /// - Returns: A `PostgrestFilterBuilder` instance for further filtering or operations.
   public func select(
     columns: String = "*",
     head: Bool = false,
@@ -32,24 +35,31 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     return PostgrestFilterBuilder(self)
   }
 
+  /// Performs an INSERT into the table.
+  /// - Parameters:
+  ///   - values: The values to insert.
+  ///   - returning: The returning options for the query.
+  ///   - count: Count algorithm to use to count rows in a table.
+  /// - Returns: A `PostgrestFilterBuilder` instance for further filtering or operations.
+  /// - Throws: An error if the insert fails.
   public func insert<U: Encodable>(
     values: U,
     returning: PostgrestReturningOptions? = nil,
     count: CountOption? = nil
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "POST"
     var prefersHeaders: [String] = []
     if let returning = returning {
       prefersHeaders.append("return=\(returning.rawValue)")
     }
-    body = values
+    body = try configuration.encoder.encode(values)
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
     if let prefer = headers["Prefer"] {
       prefersHeaders.insert(prefer, at: 0)
     }
-    if prefersHeaders.isEmpty == false {
+    if !prefersHeaders.isEmpty {
       headers["Prefer"] = prefersHeaders.joined(separator: ",")
     }
 
@@ -68,19 +78,19 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs an UPSERT into the table.
   /// - Parameters:
   ///   - values: The values to insert.
-  ///   - onConflict: By specifying the `on_conflict` query parameter, you can make UPSERT work on a
-  /// column(s) that has a unique constraint.
-  ///   - returning: By default the new record is returned. Set this to `minimal` if you don't need
-  /// this value.
+  ///   - onConflict: The column(s) with a unique constraint to perform the UPSERT.
+  ///   - returning: The returning options for the query.
   ///   - count: Count algorithm to use to count rows in a table.
   ///   - ignoreDuplicates: Specifies if duplicate rows should be ignored and not inserted.
+  /// - Returns: A `PostgrestFilterBuilder` instance for further filtering or operations.
+  /// - Throws: An error if the upsert fails.
   public func upsert<U: Encodable>(
     values: U,
     onConflict: String? = nil,
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil,
     ignoreDuplicates: Bool = false
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "POST"
     var prefersHeaders = [
       "resolution=\(ignoreDuplicates ? "ignore" : "merge")-duplicates",
@@ -89,14 +99,14 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     if let onConflict = onConflict {
       appendSearchParams(name: "on_conflict", value: onConflict)
     }
-    body = values
+    body = try configuration.encoder.encode(values)
     if let count = count {
       prefersHeaders.append("count=\(count.rawValue)")
     }
     if let prefer = headers["Prefer"] {
       prefersHeaders.insert(prefer, at: 0)
     }
-    if prefersHeaders.isEmpty == false {
+    if !prefersHeaders.isEmpty {
       headers["Prefer"] = prefersHeaders.joined(separator: ",")
     }
     return PostgrestFilterBuilder(self)
@@ -105,24 +115,25 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   /// Performs an UPDATE on the table.
   /// - Parameters:
   ///   - values: The values to update.
-  ///   - returning: By default the updated record is returned. Set this to `minimal` if you don't
-  /// need this value.
+  ///   - returning: The returning options for the query.
   ///   - count: Count algorithm to use to count rows in a table.
+  /// - Returns: A `PostgrestFilterBuilder` instance for further filtering or operations.
+  /// - Throws: An error if the update fails.
   public func update<U: Encodable>(
     values: U,
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil
-  ) -> PostgrestFilterBuilder {
+  ) throws -> PostgrestFilterBuilder {
     method = "PATCH"
     var preferHeaders = ["return=\(returning.rawValue)"]
-    body = values
+    body = try configuration.encoder.encode(values)
     if let count = count {
       preferHeaders.append("count=\(count.rawValue)")
     }
     if let prefer = headers["Prefer"] {
       preferHeaders.insert(prefer, at: 0)
     }
-    if preferHeaders.isEmpty == false {
+    if !preferHeaders.isEmpty {
       headers["Prefer"] = preferHeaders.joined(separator: ",")
     }
     return PostgrestFilterBuilder(self)
@@ -130,9 +141,9 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
 
   /// Performs a DELETE on the table.
   /// - Parameters:
-  ///   - returning: By default the deleted rows are returned. Set this to `minimal` if you don't
-  /// need this value.
+  ///   - returning: The returning options for the query.
   ///   - count: Count algorithm to use to count rows in a table.
+  /// - Returns: A `PostgrestFilterBuilder` instance for further filtering or operations.
   public func delete(
     returning: PostgrestReturningOptions = .representation,
     count: CountOption? = nil
@@ -145,7 +156,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
     if let prefer = headers["Prefer"] {
       preferHeaders.insert(prefer, at: 0)
     }
-    if preferHeaders.isEmpty == false {
+    if !preferHeaders.isEmpty {
       headers["Prefer"] = preferHeaders.joined(separator: ",")
     }
     return PostgrestFilterBuilder(self)

@@ -1,19 +1,14 @@
-PLATFORM_IOS = iOS Simulator,name=iPhone 14 Pro Max
-PLATFORM_MACOS = macOS
-PLATFORM_TVOS = tvOS Simulator,name=Apple TV
+PLATFORM ?= iOS Simulator,name=iPhone 14 Pro Max
 
 .PHONY: test-library
 test-library:
-	for platform in "$(PLATFORM_IOS)" "$(PLATFORM_MACOS)" "$(PLATFORM_TVOS)"; do \
-		xcodebuild test \
-			-scheme PostgREST \
-			-destination platform="$$platform" \
-			-derivedDataPath .deriveddata || exit 1; \
-	done;
+	xcodebuild test \
+		-scheme PostgREST \
+		-destination platform="$(PLATFORM)"
 
 .PHONY: format
 format:
-	swiftformat .
+	swift format -i -r ./Sources ./Tests ./Package.swift
 
 .PHONY: supabase-up
 supabase-up: supabase-down

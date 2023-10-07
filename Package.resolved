@@ -1,43 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "Get",
-        "repositoryURL": "https://github.com/kean/Get",
-        "state": {
-          "branch": null,
-          "revision": "12830cc64f31789ae6f4352d2d51d03a25fc3741",
-          "version": "2.1.6"
-        }
-      },
-      {
-        "package": "GetExtensions",
-        "repositoryURL": "https://github.com/binaryscraping/GetExtensions",
-        "state": {
-          "branch": null,
-          "revision": "aa20f38721142eb6592b2c8f11179d32d7d70ae3",
-          "version": "1.0.0"
-        }
-      },
-      {
-        "package": "swift-snapshot-testing",
-        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing",
-        "state": {
-          "branch": null,
-          "revision": "506b6052384d8e97a4bb16fe8680325351c23c64",
-          "version": "1.14.0"
-        }
-      },
-      {
-        "package": "swift-syntax",
-        "repositoryURL": "https://github.com/apple/swift-syntax.git",
-        "state": {
-          "branch": null,
-          "revision": "74203046135342e4a4a627476dd6caf8b28fe11b",
-          "version": "509.0.0"
-        }
+  "pins" : [
+    {
+      "identity" : "swift-snapshot-testing",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
+      "state" : {
+        "revision" : "506b6052384d8e97a4bb16fe8680325351c23c64",
+        "version" : "1.14.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-syntax.git",
+      "state" : {
+        "revision" : "74203046135342e4a4a627476dd6caf8b28fe11b",
+        "version" : "509.0.0"
+      }
+    }
+  ],
+  "version" : 2
 }

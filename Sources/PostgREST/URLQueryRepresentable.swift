@@ -32,7 +32,9 @@ extension Array: URLQueryRepresentable where Element: URLQueryRepresentable {
   }
 }
 
-extension Dictionary: URLQueryRepresentable where Key: URLQueryRepresentable,
+extension Dictionary: URLQueryRepresentable
+where
+  Key: URLQueryRepresentable,
   Value: URLQueryRepresentable
 {
   public var queryValue: String {
@@ -43,7 +45,8 @@ extension Dictionary: URLQueryRepresentable where Key: URLQueryRepresentable,
 extension JSONSerialization {
   static func stringfy(_ object: Any) -> String {
     guard
-      let data = try? data(withJSONObject: object, options: [.withoutEscapingSlashes, .sortedKeys]),
+      let data = try? data(
+        withJSONObject: object, options: [.withoutEscapingSlashes, .sortedKeys]),
       let string = String(data: data, encoding: .utf8)
     else {
       return "{}"

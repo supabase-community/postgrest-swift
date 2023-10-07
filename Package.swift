@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,20 +16,15 @@ let package = Package(
     .library(
       name: "PostgREST",
       targets: ["PostgREST"]
-    ),
+    )
   ],
   dependencies: [
-    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.8.1"),
-    .package(url: "https://github.com/kean/Get", from: "2.1.4"),
-    .package(url: "https://github.com/binaryscraping/GetExtensions", from: "1.0.0"),
+    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.8.1")
   ],
   targets: [
     .target(
       name: "PostgREST",
-      dependencies: [
-        "Get",
-        "GetExtensions",
-      ]
+      dependencies: []
     ),
     .testTarget(
       name: "PostgRESTTests",
@@ -42,7 +37,7 @@ let package = Package(
         ),
       ],
       exclude: [
-        "__Snapshots__",
+        "__Snapshots__"
       ]
     ),
     .testTarget(name: "PostgRESTIntegrationTests", dependencies: ["PostgREST"]),

@@ -96,6 +96,11 @@
             .select()
             .gt(column: "received_at", value: "2023-03-23T15:50:30.511743+00:00")
             .order(column: "received_at")
+        },
+        TestCase(name: "query with foreign table") { client in
+          client.from("user")
+            .select(foreignTable: "tasks")
+            .eq(column: "id", value: "Cigányka-ér (0+400 cskm) vízrajzi állomás")
         }
       ]
 

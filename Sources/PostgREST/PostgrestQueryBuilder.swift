@@ -4,6 +4,69 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
   ///   - columns: The columns to retrieve, separated by commas.
   ///   - head: When set to true, select will void data.
   ///   - count: Count algorithm to use to count rows in a table.
+  ///   - foreignTable: The foreign table or view name to query.
+  ///   - foreignTableColum: The columns associated with to retrieve, separated by commas
+  public func select(
+    columns: String = "*",
+    foreignTable: String? = nil,
+    foreignTableColum: String = "*",
+    head: Bool = false,
+    count: CountOption? = nil
+  ) -> PostgrestFilterBuilder {
+    method = "GET"
+    // remove whitespaces except when quoted.
+    var quoted = false
+    var selectQueryValue = ""
+    let cleanedColumns = columns.compactMap { char -> String? in
+      if char.isWhitespace, !quoted {
+        return nil
+      }
+      if char == "\"" {
+        quoted = !quoted
+      }
+      return String(char)
+    }
+      .joined(separator: "")
+    selectQueryValue += cleanedColumns
+    if let foreignTable = foreignTable {
+      let cleanedForeignTable = foreignTable.compactMap { char -> String? in
+        if char.isWhitespace, !quoted {
+          return nil
+        }
+        if char == "\"" {
+          quoted = !quoted
+        }
+        return String(char)
+      }
+        .joined(separator: "")
+      
+      let cleanedForeignTableColum = foreignTableColum.compactMap { char -> String? in
+        if char.isWhitespace, !quoted {
+          return nil
+        }
+        if char == "\"" {
+          quoted = !quoted
+        }
+        return String(char)
+      }
+        .joined(separator: "")
+      selectQueryValue = "\(cleanedForeignTable)\\(\(cleanedForeignTableColum)\\)"
+    }
+    appendSearchParams(name: "select", value: selectQueryValue)
+    if let count = count {
+      headers["Prefer"] = "count=\(count.rawValue)"
+    }
+    if head {
+      method = "HEAD"
+    }
+    return PostgrestFilterBuilder(self)
+  }
+    
+  /// Performs a vertical filtering with SELECT.
+  /// - Parameters:
+  ///   - columns: The columns to retrieve, separated by commas.
+  ///   - head: When set to true, select will void data.
+  ///   - count: Count algorithm to use to count rows in a table.
   public func select(
     columns: String = "*",
     head: Bool = false,

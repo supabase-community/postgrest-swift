@@ -50,7 +50,7 @@ public final class PostgrestQueryBuilder: PostgrestBuilder {
         return String(char)
       }
         .joined(separator: "")
-      selectQueryValue = "\(cleanedForeignTable)(\(cleanedForeignTableColum))"
+      selectQueryValue += "\(cleanedForeignTable)(\(cleanedForeignTableColum))"
     }
     appendSearchParams(name: "select", value: selectQueryValue)
     if let count = count {

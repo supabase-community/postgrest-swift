@@ -56,7 +56,7 @@ public class PostgrestClient {
     fn: String,
     params: U,
     count: CountOption? = nil
-  ) -> PostgrestTransformBuilder {
+  ) -> PostgrestFilterBuilder {
     PostgrestRpcBuilder(
       client: self,
       request: Request(
@@ -76,7 +76,7 @@ public class PostgrestClient {
   public func rpc(
     fn: String,
     count: CountOption? = nil
-  ) -> PostgrestTransformBuilder {
+  ) -> PostgrestFilterBuilder {
     rpc(fn: fn, params: NoParams(), count: count)
   }
 }

@@ -96,7 +96,7 @@
             .select()
             .gt(column: "received_at", value: "2023-03-23T15:50:30.511743+00:00")
             .order(column: "received_at")
-        }
+        },
       ]
 
       for testCase in testCases {

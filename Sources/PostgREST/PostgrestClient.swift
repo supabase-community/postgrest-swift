@@ -127,13 +127,13 @@ struct PostgrestAPIClientDelegate: APIClientDelegate {
   }
 
   private func query(_ parameters: [(String, String?)]) -> String {
-    parameters.compactMap { key, value in
+    parameters.compactMap { key, value -> (String, String)? in
       if let value {
         return (key, value)
       }
       return nil
     }
-    .map { key, value in
+    .map { key, value -> String in
       let escapedKey = escape(key)
       let escapedValue = escape(value)
       return "\(escapedKey)=\(escapedValue)"

@@ -1,4 +1,9 @@
 # Postgrest Swift
+
+> [!WARNING]  
+> This repository is deprecated and it was moved to the [monorepo](https://github.com/supabase-community/supabase-swift).
+> Repository will remain live to support old versions of the library, but any new updates **MUST** be done on the monorepo.
+
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsupabase-community%2Fpostgrest-swift%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/supabase-community/postgrest-swift)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsupabase-community%2Fpostgrest-swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/supabase-community/postgrest-swift)
 
